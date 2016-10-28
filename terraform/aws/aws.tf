@@ -66,6 +66,7 @@ variable "aws_route53_prod_hosted_zone_id"    { default = "" } # PROD Hosted Zon
 variable "aws_nat_ami" {
   default = {
     us-east-1      = "ami-4868ab25"
+    us-east-2      = "ami-92a6fef7"
     us-west-1      = "ami-004b0f60"
     us-west-2      = "ami-a275b1c2"
     eu-west-1      = "ami-a8dd45db"
