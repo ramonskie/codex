@@ -1921,7 +1921,7 @@ Created out/CertAuth.crl
 Then create the certificates for your domain (it will be `x.x.x.x.xip.io` where `x.x.x.x` is the IP address of your target pool):
 
 ```
-$ certstrap request-cert -common-name *.<your domain> -domain *.system.<your domain>,*.apps.<your domain>,*.login.<your domain>,*.uaa.<your domain>
+$ certstrap request-cert -common-name *.<your domain> -domain *.system.<your domain>,*.run.<your domain>,*.login.<your domain>,*.uaa.<your domain>
 
 Enter passphrase (empty for no passphrase):
 

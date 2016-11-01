@@ -8,7 +8,7 @@ generate a Virtual Private Cloud (VPC), then use Terraform to prepare a bastion
 host.
 
 From this bastion, we setup a special BOSH Director we call the **proto-BOSH**
-server where software like Vault, Concourse, Bolo and SHEILD are setup in order
+server where software like Vault, Concourse, Bolo and SHIELD are setup in order
 to give each of the environments created after the **proto-BOSH** key benefits of:
 
 * Secure Credential Storage
@@ -36,7 +36,7 @@ Now it's time to setup the credentials.
 ## Setup Credentials
 
 So you've got an AWS account right?  Cause otherwise let me interest you in
-another guide like our OpenStack, Azure or vSphere, etc.  j/k  
+another guide like our OpenStack, Azure or vSphere, etc.  j/k
 
 To begin, let's login to [Amazon Web Services][aws] and prepare the necessary
 credentials and resources needed.
@@ -143,7 +143,7 @@ to your Downloads folder.  Also `chmod 0600` the `*.pem` file.
 
 3. Decide where you want this file to be.  All `*.pem` files are ignored in the
 codex repository.  So you can either move this file to the same folder as
-`CODEX_ROOT/tefrraform/aws` or move it to a place you keep SSH keys and use the
+`CODEX_ROOT/terraform/aws` or move it to a place you keep SSH keys and use the
 full path to the `*.pem` file in your `aws.tfvars` for the `aws_key_file`
 variable name.
 
@@ -220,7 +220,7 @@ Refreshing Terraform state prior to plan...
 Plan: 129 to add, 0 to change, 0 to destroy.
 ```
 
-If everything worked out you should se a summary of the plan.  If this is the
+If everything worked out you should see a summary of the plan.  If this is the
 first time you've done this, all of your changes should be additions.  The
 numbers may differ from the above output, and that's okay.
 
@@ -289,7 +289,7 @@ box.nat.public        = 52.41.225.204
 
 * In the AWS Console, go to Services > EC2.  In the dashboard each of the
 **Resources** are listed.  Find the _Running Instances_ click on it and locate
-the bastion.  The _Public IP_ is an attribute in the _Decription_ tab.
+the bastion.  The _Public IP_ is an attribute in the _Description_ tab.
 
 ### Connect to Bastion
 
@@ -1672,7 +1672,7 @@ ensuring that you get no errors (no output is a good sign).
 
 Then, you can deploy to your BOSH Director via `make deploy`.
 
-Once you've deployed, you can validate the deployment via `bosh deployments`. You should see the bolo deployment. You can find the IP of bolo vm by running `bosh vms` for bolo deployment. In order to visit the Gnossis web interface on your `bolo/0` VM from your browser on your laptop, you need to setup port forwarding to enable it.
+Once you've deployed, you can validate the deployment via `bosh deployments`. You should see the bolo deployment. You can find the IP of bolo vm by running `bosh vms` for bolo deployment. In order to visit the [Gnossis](https://github.com/bolo/gnossis) web interface on your `bolo/0` VM from your browser on your laptop, you need to setup port forwarding to enable it.
 
 One way of doing it is using ngrok, go to [ngrok Downloads] [ngrok-download] page and download the right version to your `bolo/0` VM, unzip it and run `./ngrok http 80`, it will output something like this:
 
@@ -1827,7 +1827,7 @@ Running env setup hook: ~/ops/concourse-deployments/.env_hooks/00_confirm_vault
 
 Use this Vault for storing deployment credentials?  [yes or no] yes
 Running env setup hook: ~/ops/concourse-deployments/.env_hooks/gen_creds
-Generating credentials for Concource CI
+Generating credentials for Concourse CI
 Created environment aws/proto:
 ~/ops/concourse-deployments/us-west-2/proto
 ├── cloudfoundry.yml
@@ -2190,6 +2190,8 @@ Duration	00:03:11
 
 Deployed `us-west-2-alpha-bosh-lite' to `us-west-2-proto-bosh'
 ```
+
+**NOTE**: If deploying a bosh-release (BOSH in this case) fails from the proto-BOSH to a child environment (different subnet), you might be having [this issue](https://github.com/starkandwayne/codex/issues/64) with a too strict AWS Network ACL (`<vpc name>-hardened`). BOSH will fail with errors such as: `Error 450002: Timed out pinging to ... after 600 seconds`.
 
 Now we can verify the deployment and set up our `bosh` CLI target:
 
@@ -2773,7 +2775,7 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those:
+Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those (no need to create the blobstore S3 buckets yourself):
 
 ```
 $ cat properties.yml
@@ -2827,7 +2829,7 @@ $ make deploy
 
 **TODO:** Create the `ccdb`,`uaadb` and `diegodb` databases inside the RDS Instance.
 
-We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSql database using the following command.
+We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSQL database using the following command.
 
 ```
 psql postgres://cfdbadmin:your_password@your_rds_instance_endpoint:5432/postgres
@@ -2896,7 +2898,7 @@ Created out/CertAuth.crl
 Then create the certificates for your domain:
 
 ```
-$ certstrap request-cert -common-name *.staging.<your domain> -domain *.system.staging.<your domain>,*.apps.staging.<your domain>,*.login.staging.<your domain>,*.uaa.staging.<your domain>
+$ certstrap request-cert -common-name *.staging.<your domain> -domain *.system.staging.<your domain>,*.run.staging.<your domain>,*.login.staging.<your domain>,*.uaa.staging.<your domain>
 
 Enter passphrase (empty for no passphrase):
 
@@ -3171,7 +3173,7 @@ meta:
   dns: [10.4.0.2]
   elbs: [xxxxxx-staging-cf-elb] # <- ELB name
   ssh_elbs: [xxxxxx-staging-cf-ssh-elb] # <- SSH ELB name
-  router_security_group: [wide-open]
+  router_security_groups: [wide-open]
   security_groups: [wide-open]
 
 networks:
@@ -3336,7 +3338,7 @@ cf target -s test
 
 ```
 
-Once you are in the space, you can push an very simple app [cf-env][cf-env]  to the CF. Clone the [cf-env][cf-env]  rego on your bastion server, then go inside the `cf-env` directory, simply run `cf push` and it will start to upload, stage and run your app.
+Once you are in the space, you can push an very simple app [cf-env][cf-env]  to the CF. Clone the [cf-env][cf-env]  repo on your bastion server, then go inside the `cf-env` directory, simply run `cf push` and it will start to upload, stage and run your app.
 
 Your `cf push` command may fail like this:
 
