@@ -32,6 +32,9 @@ your IaaS provider. We have guides for the following:
 - [Google](google.md)
 - [OpenStack](openstack.md)
 
+## Contributing Changes
+To help us make Codex better, please read our [contribution guide](CONTRIB.md) for more details.
+
 ## Offline Reading
 
 The product of this repo is also available for online reading and PDF download

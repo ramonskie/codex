@@ -1,0 +1,16 @@
+{
+	"service": {
+		"short_name": "AWS",
+		"long_name": "Amazon Web Services"
+	},
+	"template_name": "aws",
+	"cpi_name": "aws",
+	"site": {
+		"name": "us-west-2",
+		"description": "AWS Region"
+	},
+	"stemcell": {
+		"name": "bosh-aws-xen-hvm-ubuntu-trusty-go_agent",
+		"version": "3262.2"
+	}
+}
