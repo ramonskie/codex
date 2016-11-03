@@ -2941,7 +2941,7 @@ As a quick pre-flight check, run `make manifest` to compile your Terraform plan.
 $ make deploy
 ```
 
-From here we need to configure our domain to point to the ELB. Different clients may use different DNS servers. No matter which DNS server you are using, you will need add a CNAME record that maps the domain name to the ELB endpoint. In this project, we will set up a Route53 as the DNS server. You can log into the AWS Console, create a new _Hosted Zone_ for your domain. Then go back to the `terraform/aws` sub-directory of this repository and add to the `aws.tfvars` file the following configurations:
+From here we need to configure our domain to point to the ELB. Different clients may use different DNS servers. No matter which DNS server you are using, you will need add two CNAME records, one that maps the domain-name to the CF-ELB endpoint and one that maps the ssh.domain-name to the CF-SSH-ELB endpoint. In this project, we will set up a Route53 as the DNS server. You can log into the AWS Console, create a new _Hosted Zone_ for your domain. Then go back to the `terraform/aws` sub-directory of this repository and add to the `aws.tfvars` file the following configurations:
 
 ```
 aws_route53_staging_enabled = "1"
