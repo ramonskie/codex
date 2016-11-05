@@ -3,7 +3,7 @@ ensuring that you get no errors (no output is a good sign).
 
 Then, you can deploy to your BOSH Director via `make deploy`.
 
-Once you've deployed, you can validate the deployment via `bosh deployments`. You should see the bolo deployment. You can find the IP of bolo vm by running `bosh vms` for bolo deployment. In order to visit the Gnossis web interface on your `bolo/0` VM from your browser on your laptop, you need to setup port forwarding to enable it.
+Once you've deployed, you can validate the deployment via `bosh deployments`. You should see the bolo deployment. You can find the IP of bolo vm by running `bosh vms` for bolo deployment. In order to visit the [Gnossis](https://github.com/bolo/gnossis) web interface on your `bolo/0` VM from your browser on your laptop, you need to setup port forwarding to enable it.
 
 One way of doing it is using ngrok, go to [ngrok Downloads] [ngrok-download] page and download the right version to your `bolo/0` VM, unzip it and run `./ngrok http 80`, it will output something like this:
 

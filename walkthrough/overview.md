@@ -6,7 +6,7 @@ generate the underlying cloud infrastructure, then use Terraform to prepare a ba
 host.
 
 From this bastion, we setup a special BOSH Director we call the **proto-BOSH**
-server where software like Vault, Concourse, Bolo and SHEILD are setup in order
+server where software like Vault, Concourse, Bolo and SHIELD are setup in order
 to give each of the environments created after the **proto-BOSH** key benefits of:
 
 * Secure Credential Storage

@@ -12,7 +12,7 @@ cf target -s test
 
 ```
 
-Once you are in the space, you can push an very simple app [cf-env][cf-env]  to the CF. Clone the [cf-env][cf-env]  rego on your bastion server, then go inside the `cf-env` directory, simply run `cf push` and it will start to upload, stage and run your app.
+Once you are in the space, you can push an very simple app [cf-env][cf-env]  to the CF. Clone the [cf-env][cf-env]  repo on your bastion server, then go inside the `cf-env` directory, simply run `cf push` and it will start to upload, stage and run your app.
 
 Your `cf push` command may fail like this:
 

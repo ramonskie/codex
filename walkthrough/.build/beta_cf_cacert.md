@@ -18,7 +18,7 @@ Created out/CertAuth.crl
 Then create the certificates for your domain:
 
 ```
-$ certstrap request-cert -common-name *.staging.<your domain> -domain *.system.staging.<your domain>,*.apps.staging.<your domain>,*.login.staging.<your domain>,*.uaa.staging.<your domain>
+$ certstrap request-cert -common-name *.staging.<your domain> -domain *.system.staging.<your domain>,*.run.staging.<your domain>,*.login.staging.<your domain>,*.uaa.staging.<your domain>
 
 Enter passphrase (empty for no passphrase):
 
