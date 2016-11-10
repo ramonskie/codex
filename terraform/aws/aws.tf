@@ -1412,8 +1412,8 @@ resource "aws_security_group" "cf-db" {
   tags { Name = "${var.aws_vpc_name}-cf-db" }
 
   ingress {
-    from_port   = 5432 
-    to_port     = 5432
+    from_port   = 3306
+    to_port     = 3306
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
