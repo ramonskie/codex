@@ -4,7 +4,7 @@
 ## Setup Credentials
 
 So you've got an AWS account right?  Cause otherwise let me interest you in
-another guide like our OpenStack, Azure or vSphere, etc.  j/k  
+another guide like our OpenStack, Azure or vSphere, etc.  j/k
 
 To begin, let's login to [Amazon Web Services][aws] and prepare the necessary
 credentials and resources needed.
@@ -111,7 +111,7 @@ to your Downloads folder.  Also `chmod 0600` the `*.pem` file.
 
 3. Decide where you want this file to be.  All `*.pem` files are ignored in the
 codex repository.  So you can either move this file to the same folder as
-`CODEX_ROOT/tefrraform/aws` or move it to a place you keep SSH keys and use the
+`CODEX_ROOT/terraform/aws` or move it to a place you keep SSH keys and use the
 full path to the `*.pem` file in your `aws.tfvars` for the `aws_key_file`
 variable name.
 
@@ -234,7 +234,7 @@ begin the teardown.  The second will shutdown the background process.
 (( insert_file bastion_intro.md ))
 * In the AWS Console, go to Services > EC2.  In the dashboard each of the
 **Resources** are listed.  Find the _Running Instances_ click on it and locate
-the bastion.  The _Public IP_ is an attribute in the _Decription_ tab.
+the bastion.  The _Public IP_ is an attribute in the _Description_ tab.
 
 ### Connect to Bastion
 
@@ -900,6 +900,10 @@ meta:
 ```
 
 (( insert_file alpha_boshlite_deploy.md ))
+
+**NOTE**: If deploying a bosh-release (BOSH in this case) fails from the proto-BOSH to a child environment (different subnet), you might be having [this issue](https://github.com/starkandwayne/codex/issues/64) with a too strict AWS Network ACL (`<vpc name>-hardened`). BOSH will fail with errors such as: `Error 450002: Timed out pinging to ... after 600 seconds`.
+
+(( insert_file alpha_boshlite_target.md ))
 (( insert_file alpha_cf.md ))
 (( insert_file beta_bosh_intro.md ))
 Let's try to deploy now, and see what information still needs to be resolved:
@@ -1077,7 +1081,7 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those:
+Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those (no need to create the blobstore S3 buckets yourself):
 
 ```
 $ cat properties.yml
@@ -1131,7 +1135,7 @@ $ make deploy
 
 **TODO:** Create the `ccdb`,`uaadb` and `diegodb` databases inside the RDS Instance.
 
-We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSql database using the following command.
+We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSQL database using the following command.
 
 ```
 psql postgres://cfdbadmin:your_password@your_rds_instance_endpoint:5432/postgres
@@ -1195,7 +1199,7 @@ As a quick pre-flight check, run `make manifest` to compile your Terraform plan.
 $ make deploy
 ```
 
-From here we need to configure our domain to point to the ELB. Different clients may use different DNS servers. No matter which DNS server you are using, you will need add a CNAME record that maps the domain name to the ELB endpoint. In this project, we will set up a Route53 as the DNS server. You can log into the AWS Console, create a new _Hosted Zone_ for your domain. Then go back to the `terraform/aws` sub-directory of this repository and add to the `aws.tfvars` file the following configurations:
+From here we need to configure our domain to point to the ELB. Different clients may use different DNS servers. No matter which DNS server you are using, you will need add two CNAME records, one that maps the domain-name to the CF-ELB endpoint and one that maps the ssh.domain-name to the CF-SSH-ELB endpoint. In this project, we will set up a Route53 as the DNS server. You can log into the AWS Console, create a new _Hosted Zone_ for your domain. Then go back to the `terraform/aws` sub-directory of this repository and add to the `aws.tfvars` file the following configurations:
 
 ```
 aws_route53_staging_enabled = "1"
@@ -1395,7 +1399,7 @@ meta:
   dns: [10.4.0.2]
   elbs: [xxxxxx-staging-cf-elb] # <- ELB name
   ssh_elbs: [xxxxxx-staging-cf-ssh-elb] # <- SSH ELB name
-  router_security_group: [wide-open]
+  router_security_groups: [wide-open]
   security_groups: [wide-open]
 
 networks:

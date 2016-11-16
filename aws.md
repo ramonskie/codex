@@ -1,10 +1,10 @@
-# Part I - AWS Guide
+# AWS Codex Walkthrough
 
 ## Overview
 
-Welcome to the Stark & Wayne guide to deploying Cloud Foundry on Amazon Web
-Services.  This guide provides the steps to create authentication credentials,
-generate a Virtual Private Cloud (VPC), then use Terraform to prepare a bastion
+Welcome to the Stark & Wayne guide to deploying Cloud Foundry on Amazon Web Services.
+  This guide provides the steps to create authentication credentials,
+generate the underlying cloud infrastructure, then use Terraform to prepare a bastion
 host.
 
 From this bastion, we setup a special BOSH Director we call the **proto-BOSH**
@@ -1413,6 +1413,10 @@ Now we can set up our `us-west-2` site using the `aws` template, with a
 $ genesis new site --template aws us-west-2
 $ genesis new env us-west-2 proto
 $ cd us-west-2/proto
+```
+
+Next, we `make manifest` and see what we need to fill in.
+```
 $ make manifest
 5 error(s) detected:
  - $.compilation.cloud_properties.availability_zone: What availability zone is SHIELD deployed to?
@@ -1472,8 +1476,7 @@ Then we need to configure our `store` and a default `schedule` and `retention` p
 ```
 $ cat properties.yml
 ---
-meta:
-  az: us-west-2a
+...
 
 properties:
   shield:
@@ -1495,7 +1498,7 @@ properties:
 ```
 
 Finally, if you recall, we already generated an SSH keypair for
-SHIELD, so that we could pre-deploy the pubic key to our
+SHIELD, so that we could pre-deploy the public key to our
 **proto-BOSH**.  We stuck it in the Vault, at
 `secret/us-west-2/proto/shield/keys/core`, so let's get it back out for this
 deployment:
@@ -1611,7 +1614,7 @@ Created environment us-west-2/proto:
 Bolo deployments have no secrets, so there isn't much in the way
 of environment hooks for setting up credentials.
 
-Now let's make manifest.
+Now let's make the manifest.
 
 ```
 $ cd ~/ops/bolo-deployments/us-west-2/proto
@@ -1969,7 +1972,7 @@ there are the concepts of `alpha` and `beta` sites. The alpha site is the initia
 
 Since our `alpha` site will be a bosh lite running on AWS, we will need to deploy that to our [global infrastructure network][netplan].
 
-First, lets make sure we're in the right place, targetting the right Vault:
+First, lets make sure we're in the right place, targeting the right Vault:
 
 ```
 $ cd ~/ops
@@ -2190,6 +2193,7 @@ Duration	00:03:11
 
 Deployed `us-west-2-alpha-bosh-lite' to `us-west-2-proto-bosh'
 ```
+
 
 **NOTE**: If deploying a bosh-release (BOSH in this case) fails from the proto-BOSH to a child environment (different subnet), you might be having [this issue](https://github.com/starkandwayne/codex/issues/64) with a too strict AWS Network ACL (`<vpc name>-hardened`). BOSH will fail with errors such as: `Error 450002: Timed out pinging to ... after 600 seconds`.
 
@@ -2541,7 +2545,6 @@ Now that that's handled, let's deploy for real:
 
 ```
 $ make deploy
-$ make deploy
 RSA 1024 bit CA certificates are loaded due to old openssl compatibility
 Acting as user 'admin' on 'aws-proto-bosh-microboshen-aws'
 Checking whether release bosh/256.2 already exists...YES
@@ -2614,7 +2617,7 @@ Now it's time to move on to deploying our `beta` (staging) Cloud Foundry!
 #### Beta Cloud Foundry
 
 To deploy Cloud Foundry, we will go back into our `ops` directory, making use of
-the `cf-deplyoments` repo created when we built our alpha site:
+the `cf-deployments` repo created when we built our alpha site:
 
 ```
 $ cd ~/ops/cf-deployments
@@ -2962,29 +2965,7 @@ meta:
   skip_ssl_validation: true
   cf:
     base_domain: staging.<your domain> # <- Your CF domain
-    blobstore_config:
-      fog_connection:
-        aws_access_key_id: (( vault "secret/us-west-2:access_key" ))
-        aws_secret_access_key: (( vault "secret/us-west-2:secret_key" ))
-        region: us-east-1
-    ccdb:
-      host: "xxxxxx.rds.amazonaws.com" # <- your RDS Instance endpoint
-      user: "cfdbadmin"
-      pass: (( vault "secret/us-west-2/staging/cf/rds:password" ))
-      scheme: postgres
-      port: 5432
-    uaadb:
-      host: "xxxxxx.rds.amazonaws.com" # <- your RDS Instance endpoint
-      user: "cfdbadmin"
-      pass: (( vault "secret/us-west-2/staging/cf/rds:password" ))
-      scheme: postgresql
-      port: 5432
-    diegodb:
-      host: "xxxxxx.rds.amazonaws.com" # <- your RDS Instance endpoint
-      user: "cfdbadmin"
-      pass: (( vault "secret/us-west-2/staging/cf/rds:password" ))
-      scheme: postgres
-      port: 5432
+    ...
 ```
 
 And let's see what's left to fill out now:
@@ -3254,7 +3235,7 @@ properties:
     - name: user_bosh_deployments
       rules: []
 ```
-Another thing we may want to do is scaling the VM size to save some cost when we are deploying in non-production environment, for example, we can configure the `scaling.yml` as follows:
+Another thing we may want to do is scale the VM size to save some cost when we are deploying in non-production environment, for example, we can configure the `scaling.yml` as follows:
 
 ```
 resource_pools:
@@ -3297,14 +3278,6 @@ Deployed 'us-west-2-staging-cf' to 'us-west-2-staging-bosh'
 
 ```
 
-You may encounter the following error when you are deploying Beta CF.
-
-```
-Unknown CPI error 'Unknown' with message 'Your quota allows for 0 more running instance(s). You requested at least 1.
-```
-
-Amazon has per-region limits for different types of resources. Check what resource type your failed job is using and request to increase limits for the resource your jobs are failing at. You can log into your Amazon console, go to EC2 services, on the left column click `Limits`, you can click the blue button says `Request limit increase` on the right of each type of resource. It takes less than 30 minutes get limits increase approved through Amazon.
-
 If you want to scale your deployment in the current environment (here it is staging), you can modify `scaling.yml` in your `cf-deployments/us-west-2/staging` directory. In the following example, you scale runners in both AZ to 2. Afterwards you can run `make manifest` and `make deploy`, please always remember to verify your changes in the manifest before you type `yes` to deploy making sure the changes are what you want.
 
 ```
@@ -3323,6 +3296,14 @@ check the sanity of the deployment via `genesis bosh run errand smoke_tests`. Ta
 `cf login -a https://api.system.<your CF domain>`. The admin user's password can be retrieved
 from Vault. If you run into any trouble, make sure that your DNS is pointing properly to the
 correct ELB for this environment, and that the ELB has the correct SSL certificate for your site.
+
+You may encounter the following error when you are deploying Beta CF.
+
+```
+Unknown CPI error 'Unknown' with message 'Your quota allows for 0 more running instance(s). You requested at least 1.
+```
+
+Amazon has per-region limits for different types of resources. Check what resource type your failed job is using and request to increase limits for the resource your jobs are failing at. You can log into your Amazon console, go to EC2 services, on the left column click `Limits`, you can click the blue button says `Request limit increase` on the right of each type of resource. It takes less than 30 minutes get limits increase approved through Amazon.
 
 ##### Push An App to Beta Cloud Foundry
 
@@ -3401,3 +3382,4 @@ Lather, rinse, repeat for all additional environments (dev, prod, loadtest, what
 [bastion_5]:              images/bastion_step_5.png "Bolo"
 [bastion_6]:              images/bastion_step_6.png "Concourse"
 [global_network_diagram]: images/global_network_diagram.png "Global Network Diagram"
+

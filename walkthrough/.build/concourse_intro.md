@@ -52,7 +52,7 @@ Running env setup hook: ~/ops/concourse-deployments/.env_hooks/00_confirm_vault
 
 Use this Vault for storing deployment credentials?  [yes or no] yes
 Running env setup hook: ~/ops/concourse-deployments/.env_hooks/gen_creds
-Generating credentials for Concource CI
+Generating credentials for Concourse CI
 Created environment (( insert_parameter template_name ))/proto:
 ~/ops/concourse-deployments/(( insert_parameter site.name ))/proto
 ├── cloudfoundry.yml
