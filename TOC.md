@@ -1,4 +1,4 @@
-- [Part I - AWS Guide](aws.md#part-i---aws-guide)
+- [AWS Codex Walkthrough](aws.md#aws-codex-walkthrough)
   * [Overview](aws.md#overview)
   * [Setup Credentials](aws.md#setup-credentials)
     + [Generate Access Key](aws.md#generate-access-key)
