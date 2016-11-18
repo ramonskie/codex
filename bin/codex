@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+set -e # Exit immediately if a simple command exits with exit code >0
+set -u # Report usage of any uninitialized variables.
+set -x
+
+usage() {
+  cat <<USAGE
+Usage:
+
+  $0 <action> [options]
+
+Actions:
+
+  generate_toc - Scans guides and topics files then generates a TOC.md file
+  build - Build Walkthrough (put that stuff here...)
+
+USAGE
+}
+
+timestamp() { date +'%Y-%m-%dT%H:%M:%S%z'; }
+
+log() { echo "[$(timestamp)]: $*" ; }
+
+err() { log "[err] $*" >&2 ; }
+
+fatal() { log "[fatal] $*" >&2 ; exit 1 ; }
+
+create_contents() {
+  markdown-toc ${1} | sed -e "s/#/${1}#/g"
+}
+
+scan_and_build(){
+  guides=(
+    aws.md
+    azure.md
+    openstack.md
+    google.md
+  )
+
+  for guide in "${guides[@]}"
+  do
+    create_contents ${guide}
+  done
+
+  echo "---"
+
+  topics=(
+    tls.md
+    openvpn.md
+    vault.md
+    network.md
+    troubleshooting.md
+  )
+
+  for topic in "${topics[@]}"
+  do
+    create_contents ${topic}
+  done
+}
+
+generate_toc() {
+  which markdown-toc
+  if [[ $? != 0 ]]; then
+    echo "Error: Could not find \"markdown-toc\" in the path.  Run \"npm install -g markdown-toc\"."
+    exit 1
+  fi
+  echo "Generating structure to TOC.md file."
+  scan_and_build > TOC.md
+}
+
+main() {
+  [[ -z "${DEBUG:-}" ]] || set -x
+
+  action="$1"
+  shift || true
+  case "${action}" in
+    (generate_toc)
+      generate_toc "$@"
+      ;;
+    (*|help|-h)
+      usage
+      ;;
+  esac
+}
+
+main "${@-help}"
+
+exit $?
