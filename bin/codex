@@ -2,7 +2,6 @@
 
 set -e # Exit immediately if a simple command exits with exit code >0
 set -u # Report usage of any uninitialized variables.
-set -x
 
 usage() {
   cat <<USAGE
