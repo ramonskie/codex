@@ -11,19 +11,10 @@ Usage:
 
 Actions:
 
-  generate_toc - Scans guides and topics files then generates a TOC.md file
-  build - Build Walkthrough (put that stuff here...)
+  generate - Scans guides and topics files then generates a TOC.md file
 
 USAGE
 }
-
-timestamp() { date +'%Y-%m-%dT%H:%M:%S%z'; }
-
-log() { echo "[$(timestamp)]: $*" ; }
-
-err() { log "[err] $*" >&2 ; }
-
-fatal() { log "[fatal] $*" >&2 ; exit 1 ; }
 
 create_contents() {
   markdown-toc ${1} | sed -e "s/#/${1}#/g"
@@ -58,8 +49,8 @@ scan_and_build(){
   done
 }
 
-generate_toc() {
-  which markdown-toc
+generate() {
+  which -s markdown-toc
   if [[ $? != 0 ]]; then
     echo "Error: Could not find \"markdown-toc\" in the path.  Run \"npm install -g markdown-toc\"."
     exit 1
@@ -74,8 +65,8 @@ main() {
   action="$1"
   shift || true
   case "${action}" in
-    (generate_toc)
-      generate_toc "$@"
+    (generate)
+      generate "$@"
       ;;
     (*|help|-h)
       usage
