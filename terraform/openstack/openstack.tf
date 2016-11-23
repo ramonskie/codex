@@ -7,9 +7,10 @@ variable "password"         { default = "supersecret"}
 variable "auth_url"         { default = ""}
 variable "key_pair"         { default = "codex"}
 variable "bastion_image"    { default = "ubuntu-16.06"}
+variable "bastion_name"     { default = "bastion"}
 variable "region"           { default = "RegionOne"}
 
-variable "ext_net_uuid"     { default = "09b03d93-45f8-4bea-b3b8-7ad9169f23d5"}
+variable "pub_net_uuid"     { default = ""}
 
 provider "openstack" {
     user_name  = "${var.user_name}"
@@ -43,7 +44,7 @@ resource "openstack_networking_secgroup_rule_v2" "nat_ssh_ingress" {
   protocol = "tcp"                    # Required if specifying port range
   port_range_min = 22
   port_range_max = 22
-  region = "${var.region}" 
+  region = "${var.region}"
   remote_ip_prefix = "0.0.0.0/0"
   security_group_id = "${openstack_networking_secgroup_v2.dmz.id}"
 }
@@ -138,255 +139,398 @@ resource "openstack_networking_secgroup_rule_v2" "openvpn_ingress" {
   security_group_id = "${openstack_networking_secgroup_v2.openvpn.id}"
 }
 
-################################
-#          Networks
+###############################
+#      Networked Subnets
 ###############################
 
-#FIXME: Finish these
+#########   DMZ  ############
 
-resource "openstack_networking_network_v2" "internal" {
-  name = "internal"  
-}
-
-resource "openstack_networking_network_v2" "external" {
-  name = "external"  
-}
-
-###############################
-#           Subnets
-###############################
-
-resource "openstack_networking_subnet_v2" "dmz" {
+resource "openstack_networking_network_v2" "dmz" {
   name = "dmz"
-  network_id = "${openstack_networking_network_v2.external.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dmz-subnet" {
+  name = "dmz-subnet"
+  network_id = "${openstack_networking_network_v2.dmz.id}"
   cidr = "${var.network}.0.0/24"
 }
 
-output "openstack_networking_network_v2.external.dmz.subnet" {
-  value = "${openstack_networking_subnet_v2.dmz.id}"
+output "openstack_networking_network_v2.dmz.dmz-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dmz-subnet.id}"
+}
+
+resource "openstack_networking_port_v2" "dmz-port" {
+  name = "dmz-port"
+  network_id = "${openstack_networking_network_v2.dmz.id}"
 }
 
 ######### Global ############
 
-resource "openstack_networking_subnet_v2" "global-infra-0" {
+
+resource "openstack_networking_network_v2" "global-infra-0" {
   name = "global-infra-0"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "global-infra-0-subnet" {
+  name = "global-infra-0-subnet"
+  network_id = "${openstack_networking_network_v2.global-infra-0.id}"
   cidr = "${var.network}.1.0/24"
 }
 
-output "openstack_networking_network_v2.internal.global-infra-0.subnet" {
-  value = "${openstack_networking_subnet_v2.global-infra-0.id}"
+resource "openstack_networking_port_v2" "global-infra-0-port" {
+  name = "global-infra-0-port"
+  network_id = "${openstack_networking_network_v2.global-infra-0.id}"
 }
 
-resource "openstack_networking_subnet_v2" "global-infra-1" {
+output "openstack_networking_network_v2.global-infra-0.global-infra-0-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.global-infra-0-subnet.id}"
+}
+
+resource "openstack_networking_network_v2" "global-infra-1" {
   name = "global-infra-1"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "global-infra-1-subnet" {
+  name = "global-infra-1-subnet"
+  network_id = "${openstack_networking_network_v2.global-infra-1.id}"
   cidr = "${var.network}.2.0/24"
 }
 
-output "openstack_networking_network_v2.internal.global-infra-1.subnet" {
-  value = "${openstack_networking_subnet_v2.global-infra-1.id}"
+resource "openstack_networking_port_v2" "global-infra-1-port" {
+  name = "global-infra-1-port"
+  network_id = "${openstack_networking_network_v2.global-infra-1.id}"
 }
 
-resource "openstack_networking_subnet_v2" "global-infra-2" {
+output "openstack_networking_network_v2.global-infra-1.global-infra-1-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.global-infra-1-subnet.id}"
+}
+
+resource "openstack_networking_network_v2" "global-infra-2" {
   name = "global-infra-2"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "global-infra-2-subnet" {
+  name = "global-infra-2-subnet"
+  network_id = "${openstack_networking_network_v2.global-infra-2.id}"
   cidr = "${var.network}.3.0/24"
 }
 
-output "openstack_networking_network_v2.internal.global-infra-2.subnet" {
-  value = "${openstack_networking_subnet_v2.global-infra-2.id}"
+resource "openstack_networking_port_v2" "global-infra-2-port" {
+  name = "global-infra-2-port"
+  network_id = "${openstack_networking_network_v2.global-infra-2.id}"
 }
 
-resource "openstack_networking_subnet_v2" "global-openvpn-0" {
+output "openstack_networking_network_v2.global-infra-2.global-infra-2-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.global-infra-2-subnet.id}"
+}
+
+resource "openstack_networking_network_v2" "global-openvpn-0" {
   name = "global-openvpn-0"
-  network_id = "${openstack_networking_network_v2.external.id}"
+}
+
+resource "openstack_networking_subnet_v2" "global-openvpn-0-subnet" {
+  name = "global-openvpn-0-subnet"
+  network_id = "${openstack_networking_network_v2.global-openvpn-0.id}"
   cidr = "${var.network}.4.0/25"
 }
 
-output "openstack_networking_network_v2.external.global-openvpn-0.subnet" {
-  value = "${openstack_networking_subnet_v2.global-openvpn-0.id}"
+output "openstack_networking_network_v2.global-openvpn-0.global-openvpn-0-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.global-openvpn-0-subnet.id}"
 }
 
-resource "openstack_networking_subnet_v2" "global-openvpn-1" {
+resource "openstack_networking_network_v2" "global-openvpn-1" {
   name = "global-openvpn-1"
-  network_id = "${openstack_networking_network_v2.external.id}"
+}
+
+resource "openstack_networking_subnet_v2" "global-openvpn-1-subnet" {
+  name = "global-openvpn-1-subnet"
+  network_id = "${openstack_networking_network_v2.global-openvpn-1.id}"
   cidr = "${var.network}.4.128/25"
 }
 
-output "openstack_networking_network_v2.external.global-openvpn-1.subnet" {
-  value = "${openstack_networking_subnet_v2.global-openvpn-1.id}"
+output "openstack_networking_network_v2.global-openvpn-1.global-openvpn-1-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.global-openvpn-1-subnet.id}"
 }
 
 ######## Development ##########
 
 
-resource "openstack_networking_subnet_v2" "dev-infra-0" {
+resource "openstack_networking_network_v2" "dev-infra-0" {
   name = "dev-infra-0"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-infra-0-subnet" {
+  name = "dev-infra-0-subnet"
+  network_id = "${openstack_networking_network_v2.dev-infra-0.id}"
   cidr = "${var.network}.16.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-infra-0.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-infra-0.id}"
+output "openstack_networking_network_v2.dev-infra-0.dev-infra-0-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-infra-0-subnet.id}"
 }
 
-resource "openstack_networking_subnet_v2" "dev-infra-1" {
+resource "openstack_networking_network_v2" "dev-infra-1" {
   name = "dev-infra-1"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-infra-1-subnet" {
+  name = "dev-infra-1-subnet"
+  network_id = "${openstack_networking_network_v2.dev-infra-1.id}"
   cidr = "${var.network}.17.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-infra-1.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-infra-1.id}"
+output "openstack_networking_network_v2.dev-infra-1.dev-infra-1-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-infra-1-subnet.id}"
 }
 
-resource "openstack_networking_subnet_v2" "dev-infra-2" {
+resource "openstack_networking_network_v2" "dev-infra-2" {
   name = "dev-infra-2"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-infra-2-subnet" {
+  name = "dev-infra-2-subnet"
+  network_id = "${openstack_networking_network_v2.dev-infra-2.id}"
   cidr = "${var.network}.18.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-infra-2.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-infra-2.id}"
+output "openstack_networking_network_v2.dev-infra-2.dev-infra-2-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-infra-2-subnet.id}"
 }
 
 
 ######## DEV-CF-EDGE ##########
 
-resource "openstack_networking_subnet_v2" "dev-cf-edge-0" {
+resource "openstack_networking_network_v2" "dev-cf-edge-0" {
   name = "dev-cf-edge-0"
-  network_id = "${openstack_networking_network_v2.external.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-edge-0-subnet" {
+  name = "dev-cf-edge-0-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-edge-0.id}"
   cidr = "${var.network}.19.0/25"
 }
 
-output "openstack_networking_network_v2.external.dev-cf-edge-0.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-cf-edge-0.id}"
+output "openstack_networking_network_v2.dev-cf-edge-0.dev-cf-edge-0-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-edge-0-subnet.id}"
 }
 
-resource "openstack_networking_subnet_v2" "dev-cf-edge-1" {
+resource "openstack_networking_network_v2" "dev-cf-edge-1" {
   name = "dev-cf-edge-1"
-  network_id = "${openstack_networking_network_v2.external.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-edge-1-subnet" {
+  name = "dev-cf-edge-1-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-edge-1.id}"
   cidr = "${var.network}.19.128/25"
 }
 
-output "openstack_networking_network_v2.external.dev-cf-edge-1.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-cf-edge-1.id}"
+output "openstack_networking_network_v2.dev-cf-edge-1.dev-cf-edge-1-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-edge-1-subnet.id}"
 }
+
 
 ######## DEV-CF-CORE #########
 
-resource "openstack_networking_subnet_v2" "dev-cf-core-0" {
+resource "openstack_networking_network_v2" "dev-cf-core-0" {
   name = "dev-cf-core-0"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-core-0-subnet" {
+  name = "dev-cf-core-0-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-core-0.id}"
   cidr = "${var.network}.20.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-cf-core-0.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-cf-core-0.id}"
+output "openstack_networking_network_v2.dev-cf-core-0.dev-cf-core-0-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-core-0-subnet.id}"
 }
 
-resource "openstack_networking_subnet_v2" "dev-cf-core-1" {
+resource "openstack_networking_network_v2" "dev-cf-core-1" {
   name = "dev-cf-core-1"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-core-1-subnet" {
+  name = "dev-cf-core-1-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-core-1.id}"
   cidr = "${var.network}.21.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-cf-core-1.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-cf-core-1.id}"
+output "openstack_networking_network_v2.dev-cf-core-1.dev-cf-core-1-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-core-1-subnet.id}"
 }
 
-resource "openstack_networking_subnet_v2" "dev-cf-core-2" {
+resource "openstack_networking_network_v2" "dev-cf-core-2" {
   name = "dev-cf-core-2"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-core-2-subnet" {
+  name = "dev-cf-core-2-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-core-2.id}"
   cidr = "${var.network}.22.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-cf-core-2.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-cf-core-2.id}"
+output "openstack_networking_network_v2.dev-cf-core-2.dev-cf-core-2-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-core-2-subnet.id}"
 }
 
 
 ######## DEV-CF-RUNTIME #########
 
-resource "openstack_networking_subnet_v2" "dev-cf-runtime-0" {
+resource "openstack_networking_network_v2" "dev-cf-runtime-0" {
   name = "dev-cf-runtime-0"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-runtime-0-subnet" {
+  name = "dev-cf-runtime-0-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-runtime-0.id}"
   cidr = "${var.network}.23.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-cf-runtime-0.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-cf-runtime-0.id}"
+output "openstack_networking_network_v2.dev-cf-runtime-0.dev-cf-runtime-0-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-runtime-0-subnet.id}"
 }
 
-
-resource "openstack_networking_subnet_v2" "dev-cf-runtime-1" {
+resource "openstack_networking_network_v2" "dev-cf-runtime-1" {
   name = "dev-cf-runtime-1"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-runtime-1-subnet" {
+  name = "dev-cf-runtime-1-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-runtime-1.id}"
   cidr = "${var.network}.24.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-cf-runtime-1.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-cf-runtime-1.id}"
+output "openstack_networking_network_v2.dev-cf-runtime-1.dev-cf-runtime-1-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-runtime-1-subnet.id}"
 }
 
-resource "openstack_networking_subnet_v2" "dev-cf-runtime-2" {
+resource "openstack_networking_network_v2" "dev-cf-runtime-2" {
   name = "dev-cf-runtime-2"
-  network_id = "${openstack_networking_network_v2.internal.id}"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-runtime-2-subnet" {
+  name = "dev-cf-runtime-2-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-runtime-2.id}"
   cidr = "${var.network}.25.0/24"
 }
 
-output "openstack_networking_network_v2.internal.dev-cf-runtime-2.subnet" {
-  value = "${openstack_networking_subnet_v2.dev-cf-runtime-2.id}"
+output "openstack_networking_network_v2.dev-cf-runtime-2.dev-cf-runtime-2-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-runtime-2-subnet.id}"
 }
 
 ###############################
-#      Routers
+#           Routers
 ###############################
 
-resource "openstack_networking_router_v2" "global-to-ext" {
-  name = "global-to-ext"
-  external_gateway = "${var.ext_net_uuid}"
+#########   DMZ  ############
+
+resource "openstack_networking_router_v2" "dmz-to-pub" {
+  name = "dmz-to-pub"
+  external_gateway = "${var.pub_net_uuid}"
 }
 
-resource "openstack_networking_router_interface_v2" "global-infra-0-to-ext" {
-  router_id = "${openstack_networking_router_v2.global-to-ext.id}"
-  subnet_id = "${openstack_networking_subnet_v2.global-infra-0.id}"
+resource "openstack_networking_router_interface_v2" "dmz-to-pub" {
+  router_id = "${openstack_networking_router_v2.dmz-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dmz-subnet.id}"
 }
 
-resource "openstack_networking_router_interface_v2" "global-infra-1-to-ext" {
-  router_id = "${openstack_networking_router_v2.global-to-ext.id}"
-  subnet_id = "${openstack_networking_subnet_v2.global-infra-1.id}"
+resource "openstack_networking_router_interface_v2" "global-infra-0-to-dmz" {
+  router_id = "${openstack_networking_router_v2.dmz-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.global-infra-0-port.id}"
 }
 
-resource "openstack_networking_router_interface_v2" "global-infra-2-to-ext" {
-  router_id = "${openstack_networking_router_v2.global-to-ext.id}"
-  subnet_id = "${openstack_networking_subnet_v2.global-infra-2.id}"
+resource "openstack_networking_router_interface_v2" "global-infra-1-to-dmz" {
+  router_id = "${openstack_networking_router_v2.dmz-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.global-infra-1-port.id}"
 }
 
-resource "openstack_networking_router_v2" "dev-to-ext" {
-  name = "dev-to-ext"
-  external_gateway = "${var.ext_net_uuid}"
+resource "openstack_networking_router_interface_v2" "global-infra-2-to-dmz" {
+  router_id = "${openstack_networking_router_v2.dmz-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.global-infra-2-port.id}"
 }
 
-resource "openstack_networking_router_interface_v2" "dev-infra_0-to-ext" {
-  router_id = "${openstack_networking_router_v2.dev-to-ext.id}"
-  subnet_id = "${openstack_networking_subnet_v2.dev-infra-0.id}"
+######### Global ############
+
+resource "openstack_networking_router_v2" "global-to-pub" {
+  name = "global-to-pub"
+  external_gateway = "${var.pub_net_uuid}"
 }
 
-resource "openstack_networking_router_interface_v2" "dev-infra_1-to-ext" {
-  router_id = "${openstack_networking_router_v2.dev-to-ext.id}"
-  subnet_id = "${openstack_networking_subnet_v2.dev-infra-1.id}"
+resource "openstack_networking_router_interface_v2" "global-infra-0-to-pub" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.global-infra-0-subnet.id}"
 }
 
-resource "openstack_networking_router_interface_v2" "dev-infra_2-to-ext" {
-  router_id = "${openstack_networking_router_v2.dev-to-ext.id}"
-  subnet_id = "${openstack_networking_subnet_v2.dev-infra-2.id}"
+resource "openstack_networking_router_interface_v2" "global-infra-1-to-pub" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.global-infra-1-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "global-infra-2-to-pub" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.global-infra-2-subnet.id}"
+}
+
+######## Development ##########
+
+resource "openstack_networking_router_v2" "dev-to-pub" {
+  name = "dev-to-pub"
+  external_gateway = "${var.pub_net_uuid}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-infra-0-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-infra-0-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-infra-1-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-infra-1-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-infra-2-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-infra-2-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-runtime-0-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-runtime-0-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-runtime-1-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-runtime-1-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-runtime-2-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-runtime-2-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-core-0-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-0-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-core-1-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-1-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-core-2-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-2-subnet.id}"
 }
 
 ###############################
-#      Volumes and Instances
+#    Volumes and Instances
 ###############################
+
+resource "openstack_compute_floatingip_v2" "bastion_ip" {
+  pool = "public"
+  region = "${var.region}" 
+}
 
 resource "openstack_blockstorage_volume_v2" "volume_bastion" {
   region = "${var.region}" 
@@ -395,17 +539,24 @@ resource "openstack_blockstorage_volume_v2" "volume_bastion" {
   size = 2
 }
 
-
 resource "openstack_compute_instance_v2" "bastion" {
-  name = "bastion"
+  name = "${var.bastion_name}"
   image_name = "${var.bastion_image}"
   flavor_id = "3"
   key_pair = "${var.key_pair}"
   security_groups = ["default"]
+  floating_ip = "${openstack_compute_floatingip_v2.bastion_ip.address}"
+
+  config_drive = true
+  user_data = <<EOF
+#!/bin/bash
+
+sed -i '1s/127.0.0.1 localhost/127.0.0.1 localhost ${var.bastion_name}/' /etc/hosts
+EOF
 
   network {
-    name = "internal"
-    uuid = "${openstack_networking_network_v2.internal.id}"
+    name = "dmz"
+    uuid = "${openstack_networking_network_v2.dmz.id}"
   }
 
   volume {
