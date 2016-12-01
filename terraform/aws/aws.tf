@@ -1907,6 +1907,11 @@ resource "aws_instance" "bastion" {
     }
   }
 }
+resource "aws_eip" "bastion" {
+  instance = "${aws_instance.bastion.id}"
+  vpc      = true
+}
+
 output "box.bastion.public" {
-  value = "${aws_instance.bastion.public_ip}"
+  value = "${aws_eip.bastion.public_ip}"
 }
