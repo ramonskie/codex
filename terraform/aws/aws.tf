@@ -1877,7 +1877,6 @@ resource "aws_instance" "bastion" {
   key_name                    = "${var.aws_key_name}"
   vpc_security_group_ids      = ["${aws_security_group.dmz.id}"]
   subnet_id                   = "${aws_subnet.dmz.id}"
-  associate_public_ip_address = true
 
   tags { Name = "bastion" }
 
