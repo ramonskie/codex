@@ -1493,12 +1493,8 @@ resource "aws_instance" "nat" {
 
   tags { Name = "nat" }
 }
-resource "aws_eip" "nat" {
-  instance = "${aws_instance.nat.id}"
-  vpc      = true
-}
 output "box.nat.public" {
-  value = "${aws_eip.nat.public_ip}"
+  value = "${aws_instance.nat.public_ip}"
 }
 
 
