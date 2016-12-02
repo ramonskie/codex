@@ -1412,7 +1412,7 @@ resource "aws_security_group" "cf-db" {
   tags { Name = "${var.aws_vpc_name}-cf-db" }
 
   ingress {
-    from_port   = 5432 
+    from_port   = 5432
     to_port     = 5432
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
@@ -1511,12 +1511,8 @@ resource "aws_instance" "nat" {
 
   tags { Name = "nat" }
 }
-resource "aws_eip" "nat" {
-  instance = "${aws_instance.nat.id}"
-  vpc      = true
-}
 output "box.nat.public" {
-  value = "${aws_eip.nat.public_ip}"
+  value = "${aws_instance.nat.public_ip}"
 }
 
 
@@ -1540,7 +1536,7 @@ resource "aws_db_instance" "dev-cf-db" {
   engine_version          = "9.5.2"
   instance_class          = "${var.aws_rds_dev_instance_class}"
   username                = "${var.aws_rds_master_user}"
-  password                = "${var.aws_rds_dev_master_password}" 
+  password                = "${var.aws_rds_dev_master_password}"
   port                    = "5432"
   db_subnet_group_name    = "${aws_db_subnet_group.dev-cf-db.name}"
   multi_az                = true
@@ -1563,10 +1559,10 @@ resource "aws_db_instance" "staging-cf-db" {
   engine_version          = "9.5.2"
   instance_class          = "${var.aws_rds_staging_instance_class}"
   username                = "${var.aws_rds_master_user}"
-  password                = "${var.aws_rds_staging_master_password}" 
+  password                = "${var.aws_rds_staging_master_password}"
   port                    = "5432"
   db_subnet_group_name    = "${aws_db_subnet_group.staging-cf-db.name}"
-  multi_az                = true 
+  multi_az                = true
   vpc_security_group_ids  = ["${aws_security_group.cf-db.id}"]
   backup_retention_period = 5
 }
@@ -1586,7 +1582,7 @@ resource "aws_db_instance" "prod-cf-db" {
   engine_version          = "9.5.2"
   instance_class          = "${var.aws_rds_prod_instance_class}"
   username                = "${var.aws_rds_master_user}"
-  password                = "${var.aws_rds_prod_master_password}" 
+  password                = "${var.aws_rds_prod_master_password}"
   port                    = "5432"
   db_subnet_group_name    = "${aws_db_subnet_group.prod-cf-db.name}"
   multi_az                = true
@@ -1923,7 +1919,6 @@ resource "aws_instance" "bastion" {
   key_name                    = "${var.aws_key_name}"
   vpc_security_group_ids      = ["${aws_security_group.dmz.id}"]
   subnet_id                   = "${aws_subnet.dmz.id}"
-  associate_public_ip_address = true
 
   tags { Name = "bastion" }
 
@@ -1949,6 +1944,11 @@ resource "aws_instance" "bastion" {
     }
   }
 }
+resource "aws_eip" "bastion" {
+  instance = "${aws_instance.bastion.id}"
+  vpc      = true
+}
+
 output "box.bastion.public" {
-  value = "${aws_instance.bastion.public_ip}"
+  value = "${aws_eip.bastion.public_ip}"
 }
