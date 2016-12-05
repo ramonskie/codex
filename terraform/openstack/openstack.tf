@@ -553,6 +553,16 @@ resource "openstack_networking_router_interface_v2" "dev-cf-core-2-to-pub" {
   subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-2-subnet.id}"
 }
 
+resource "openstack_networking_router_interface_v2" "dev-cf-edge-0-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-0-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-edge-1-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-1-subnet.id}"
+}
+
 ###############################
 #    Volumes and Instances
 ###############################
