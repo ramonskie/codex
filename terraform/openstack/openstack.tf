@@ -265,12 +265,22 @@ resource "openstack_networking_subnet_v2" "dev-infra-0-subnet" {
   cidr = "${var.network}.16.0/24"
 }
 
+resource "openstack_networking_port_v2" "dev-infra-0-port" {
+  name = "dev-infra-0-port"
+  network_id = "${openstack_networking_network_v2.dev-infra-0.id}"
+}
+
 output "openstack_networking_network_v2.dev-infra-0.dev-infra-0-subnet.subnet" {
   value = "${openstack_networking_subnet_v2.dev-infra-0-subnet.id}"
 }
 
 resource "openstack_networking_network_v2" "dev-infra-1" {
   name = "dev-infra-1"
+}
+
+resource "openstack_networking_port_v2" "dev-infra-1-port" {
+  name = "dev-infra-1-port"
+  network_id = "${openstack_networking_network_v2.dev-infra-1.id}"
 }
 
 resource "openstack_networking_subnet_v2" "dev-infra-1-subnet" {
@@ -285,6 +295,11 @@ output "openstack_networking_network_v2.dev-infra-1.dev-infra-1-subnet.subnet" {
 
 resource "openstack_networking_network_v2" "dev-infra-2" {
   name = "dev-infra-2"
+}
+
+resource "openstack_networking_port_v2" "dev-infra-2-port" {
+  name = "dev-infra-2-port"
+  network_id = "${openstack_networking_network_v2.dev-infra-2.id}"
 }
 
 resource "openstack_networking_subnet_v2" "dev-infra-2-subnet" {
@@ -471,6 +486,21 @@ resource "openstack_networking_router_interface_v2" "global-infra-2-to-pub" {
   subnet_id = "${openstack_networking_subnet_v2.global-infra-2-subnet.id}"
 }
 
+resource "openstack_networking_router_interface_v2" "global-infra-0-to-dev-infra-0" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.dev-infra-0-port.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "global-infra-1-to-dev-infra-1" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.dev-infra-1-port.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "global-infra-2-to-dev-infra-2" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.dev-infra-2-port.id}"
+}
+
 ######## Development ##########
 
 resource "openstack_networking_router_v2" "dev-to-pub" {
@@ -521,6 +551,16 @@ resource "openstack_networking_router_interface_v2" "dev-cf-core-1-to-pub" {
 resource "openstack_networking_router_interface_v2" "dev-cf-core-2-to-pub" {
   router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
   subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-2-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-edge-0-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-0-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-edge-1-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-1-subnet.id}"
 }
 
 ###############################
