@@ -369,19 +369,16 @@ as static.  This will be assigned to our `bosh/0` director VM.
 (( insert_file proto_bosh_deploy.md ))
 (( insert_file proto_vault_intro.md ))
 ```
-$ cd ~/ops/vault-deployments/us-west-2/proto
+$ cd ~/ops/vault-deployments/(( insert_parameter site.name ))/proto
 $ make manifest
-10 error(s) detected:
- - $.compilation.cloud_properties.availability_zone: Define the z1 AWS availability zone
- - $.meta.aws.azs.z1: Define the z1 AWS availability zone
- - $.meta.aws.azs.z2: Define the z2 AWS availability zone
- - $.meta.aws.azs.z3: Define the z3 AWS availability zone
- - $.networks.vault_z1.subnets: Specify the z1 network for vault
- - $.networks.vault_z2.subnets: Specify the z2 network for vault
- - $.networks.vault_z3.subnets: Specify the z3 network for vault
- - $.resource_pools.small_z1.cloud_properties.availability_zone: Define the z1 AWS availability zone
- - $.resource_pools.small_z2.cloud_properties.availability_zone: Define the z2 AWS availability zone
- - $.resource_pools.small_z3.cloud_properties.availability_zone: Define the z3 AWS availability zone
+7 error(s) detected:
+- $.meta.openstack.azs.z1: Define the z1 OpenStack availability zone
+- $.meta.openstack.azs.z2: Define the z2 OpenStack availability zone
+- $.meta.openstack.azs.z3: Define the z3 OpenStack availability zone
+- $.networks.vault_z1.subnets: Specify the z1 network for vault
+- $.networks.vault_z2.subnets: Specify the z2 network for vault
+- $.networks.vault_z3.subnets: Specify the z3 network for vault
+- $.properties.vault.ha.domain: What fully-qualified domain name do you want to access your Vault at?
 
 
 Failed to merge templates; bailing...
@@ -401,22 +398,22 @@ networks:
   - **10.4.2.16/28** in zone 2 (b)
   - **10.4.3.16/28** in zone 3 (c)
 
-First, lets do our AWS-specific region/zone configuration, along with our Vault HA fully-qualified domain name:
+First, lets do our Openstack-specific region/zone configuration, along with our Vault HA fully-qualified domain name:
 
 ```
 $ cat properties.yml
 ---
 meta:
-  aws:
-    region: us-west-2
+  openstack:
     azs:
-      z1: (( concat meta.aws.region "a" ))
-      z2: (( concat meta.aws.region "b" ))
-      z3: (( concat meta.aws.region "c" ))
+      z1: dc01
+      z2: dc01
+      z3: dc01
+
 properties:
   vault:
     ha:
-      domain: 10.4.1.16
+      domain: 10.4.1.17
 ```
 
 Our `/28` ranges are actually in their corresponding `/24` ranges
@@ -430,57 +427,51 @@ $ cat networking.yml
 networks:
   - name: vault_z1
     subnets:
-      - range:    10.4.1.0/24
-        gateway:  10.4.1.1
-        dns:     [10.4.0.2]
-        cloud_properties:
-          subnet: subnet-xxxxxxxx  # <--- your AWS Subnet ID
-          security_groups: [wide-open]
-        reserved:
-          - 10.4.1.2 - 10.4.1.3    # Amazon reserves these
-          - 10.4.1.4 - 10.4.1.15   # Allocated to other deployments
-            # Vault (z1) is in 10.4.1.16/28
-          - 10.4.1.32 - 10.4.1.254 # Allocated to other deployments
-        static:
-          - 10.4.1.16 - 10.4.1.18
+    - range:    10.4.1.0/24
+      gateway:  10.4.1.1
+      dns:     [8.8.8.8, 8.8.4.4]
+      cloud_properties:
+        net_id: b5bfe2d1-fa17-41cc-9928-89013c27e266   #  ID for global-infra-0
+        security_groups: [wide-open]
+      reserved:
+        - 10.4.1.2 - 10.4.1.15
+        - 10.4.1.32 - 10.4.1.254                       # Vault (z1) is in 10.4.1.16/28
+      static:
+        - 10.4.1.16 - 10.4.1.18
 
   - name: vault_z2
     subnets:
-      - range:    10.4.2.0/24
-        gateway:  10.4.2.1
-        dns:     [10.4.2.2]
-        cloud_properties:
-          subnet: subnet-yyyyyyyy  # <--- your AWS Subnet ID
-          security_groups: [wide-open]
-        reserved:
-          - 10.4.2.2 - 10.4.2.3    # Amazon reserves these
-          - 10.4.2.4 - 10.4.2.15   # Allocated to other deployments
-            # Vault (z2) is in 10.4.2.16/28
-          - 10.4.2.32 - 10.4.2.254 # Allocated to other deployments
-        static:
-          - 10.4.2.16 - 10.4.2.18
+    - range:    10.4.2.0/24
+      gateway:  10.4.2.1
+      dns:     [8.8.8.8, 8.8.4.4]
+      cloud_properties:
+        net_id: 2977ae9f-88f5-4d12-ad8e-1e393731ebb7   #  ID for global-infra-1
+        security_groups: [wide-open]
+      reserved:
+        - 10.4.2.2 - 10.4.2.15
+        - 10.4.2.32 - 10.4.2.254                       # Vault (z2) is in 10.4.2.16/28
+      static:
+        - 10.4.2.16 - 10.4.2.18
 
   - name: vault_z3
     subnets:
-      - range:    10.4.3.0/24
-        gateway:  10.4.3.1
-        dns:     [10.4.3.2]
-        cloud_properties:
-          subnet: subnet-zzzzzzzz  # <--- your AWS Subnet ID
-          security_groups: [wide-open]
-        reserved:
-          - 10.4.3.2 - 10.4.3.3    # Amazon reserves these
-          - 10.4.3.4 - 10.4.3.15   # Allocated to other deployments
-            # Vault (z3) is in 10.4.3.16/28
-          - 10.4.3.32 - 10.4.3.254 # Allocated to other deployments
-        static:
-          - 10.4.3.16 - 10.4.3.18
+    - range:    10.4.3.0/24
+      gateway:  10.4.3.1
+      dns:     [8.8.8.8, 8.8.4.4]
+      cloud_properties:
+        net_id: 47f76643-ee72-44a3-b47f-a43e9c6ea8d2   #  ID for global-infra-2
+        security_groups: [wide-open]
+      reserved:
+        - 10.4.3.2 - 10.4.3.15
+        - 10.4.3.32 - 10.4.3.254                       # Vault (z3) is in 10.4.3.16/28
+      static:
+        - 10.4.3.16 - 10.4.3.18
 ```
 
 That's a ton of configuration, but when you break it down it's not
 all that bad.  We're defining three separate networks (one for
 each of the three availability zones).  Each network has a unique
-AWS Subnet ID, but they share the same EC2 Security Groups, since
+Openstack Network UUID, but they share the same Security Groups, since
 we want uniform access control across the board.
 
 The most difficult part of this configuration is getting the
@@ -493,16 +484,31 @@ zone to zone (x.x.1.x for zone 1, x.x.2.x for zone 2, etc.)
 (( insert_file proto_vault_deploy.md ))
 (( insert_file proto_vault_init.md ))
 (( insert_file shield_intro.md ))
-### Setting up AWS S3 For Backup Archives
+### Setting up Object Storage For Backup Archives
 
 To help keep things isolated, we're going to set up a brand new
-IAM user just for backup archive storage.  It's a good idea to
+user just for backup archive storage.  It's a good idea to
 name this user something like `backup` or `shield-backup` so that
 no one tries to re-purpose it later, and so that it doesn't get
-deleted. We also need to generate an access key for this user and store those credentials in the Vault:
+deleted.
+
+We also need to generate an S3 access key for this user and store those credentials
+in the Vault:
 
 ```
-$ safe set secret/us-west-2/proto/shield/aws access_key secret_key
+$ openstack ec2 credentials create --user shield-backup --project cf
++------------+----------------------------------+
+| Field      | Value                            |
++------------+----------------------------------+
+| access     | 453389616a724f74b5ba0c9e6874f77d |
+| project_id | 4116a3a098e64ff086b21ffba9dd2b2e |
+| secret     | 64206456a18946f88399103be7dc6a8f |
+| trust_id   | None                             |
+| user_id    | 95aaf239306f45759d0adc7f4855c12d |
++------------+----------------------------------+
+
+$ export VAULT_PREFIX=secret/(( insert_parameter site.name ))/proto/shield
+$ safe set ${VAULT_PREFIX}/s3 access_key secret_key
 access_key [hidden]:
 access_key [confirm]:
 
@@ -510,48 +516,20 @@ secret_key [hidden]:
 secret_key [confirm]:
 ```
 
-You're also going to want to provision a dedicated S3 bucket to
+You're also going to want to provision a dedicated bucket to
 store archives in, and name it something descriptive, like
 `codex-backups`.
 
-Since the generic S3 bucket policy is a little open (and we don't
-want random people reading through our backups), we're going to
-want to create our own policy. Go to the IAM user you just created, click
-`permissions`, then click the blue button with `Create User Policy`, paste the
-following policy and modify accordingly, click `Validate Policy` and apply the
-policy afterwards.
-
-
-```
-{
-  "Statement": [
-    {
-      "Effect"   : "Allow",
-      "Action"   : "s3:ListAllMyBuckets",
-      "Resource" : "arn:aws:iam:xxxxxxxxxxxx:user/zzzzz"
-    },
-    {
-      "Effect"   : "Allow",
-      "Action"   : "s3:*",
-      "Resource" : [
-        "arn:aws:s3:::your-bucket-name",
-        "arn:aws:s3:::your-bucket-name/*"
-      ]
-    }
-  ]
-}
-```
+QUINN:  PLEASE REVIEW AND ADD / CHANGE AS NEEDED.
 
 (( insert_file shield_setup.md ))
 Next, we `make manifest` and see what we need to fill in.
 ```
 $ make manifest
-5 error(s) detected:
- - $.compilation.cloud_properties.availability_zone: What availability zone is SHIELD deployed to?
+3 error(s) detected:
  - $.meta.az: What availability zone is SHIELD deployed to?
  - $.networks.shield.subnets: Specify your shield subnet
  - $.properties.shield.daemon.ssh_private_key: Specify the SSH private key that the daemon will use to talk to the agents
- - $.resource_pools.small.cloud_properties.availability_zone: What availability zone is SHIELD deployed to?
 
 
 Failed to merge templates; bailing...
@@ -561,14 +539,14 @@ make: *** [manifest] Error 5
 
 By now, this should be old hat.  According to the [Network
 Plan][netplan], the SHIELD deployment belongs in the
-**10.4.1.32/28** network, in zone 1 (a).  Let's put that
+**10.4.1.32/28** network, in (( insert_parameter site.name )).  Let's put that
 information into `properties.yml`:
 
 ```
 $ cat properties.yml
 ---
 meta:
-  az: us-west-2a
+  az: (( insert_parameter site.name ))
 ```
 
 As we found with Vault, the `/28` range is actually in it's outer
@@ -581,30 +559,49 @@ $ cat networking.yml
 networks:
   - name: shield
     subnets:
-      - range:    10.4.1.0/24
-        gateway:  10.4.1.1
-        dns:     [10.4.0.2]
-        cloud_properties:
-          subnet: subnet-xxxxxxxx  # <--- your AWS Subnet ID
-          security_groups: [wide-open]
-        reserved:
-          - 10.4.1.2 - 10.4.1.3    # Amazon reserves these
-          - 10.4.1.4 - 10.4.1.31   # Allocated to other deployments
-            # SHIELD is in 10.4.1.32/28
-          - 10.4.1.48 - 10.4.1.254 # Allocated to other deployments
-        static:
-          - 10.4.1.32 - 10.4.1.34
+    - range:    10.4.1.0/24
+      gateway:  10.4.1.1
+      dns:     [8.8.8.8, 8.8.4.4]
+      cloud_properties:
+        net_id: b5bfe2d1-fa17-41cc-9928-89013c27e266   #  ID for global-infra-0
+        security_groups: [wide-open]
+      reserved:
+        - 10.4.1.2 - 10.4.1.31
+        - 10.4.1.48 - 10.4.1.254                       # SHIELD is in 10.4.1.32/28
+      static:
+        - 10.4.1.32 - 10.4.1.32
+  - name: floating
+    type: vip
+    cloud_properties:
+      net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5     # ID for public
+      security_groups: [wide-open]
+
+jobs:
+- name: shield
+  networks:
+  - name: shield
+    default: [dns, gateway]
+  - name: floating
+    static_ips:
+    - (( insert_parameter openstack.shield_fip ))
 ```
 
-(Don't forget to change your `subnet` to match your AWS VPC
-configuration.)
+(Don't forget to change your `subnet` to match your Openstack Network UUID and
+associated security group.)
+
+Also, in this case (as will be seen later with things like Bolo and Cloud Foundry),
+we are adding a Floating IP to this instance, so we can access the SHIELD UI.  To do
+this, we have added another network called `floating`, gave it a type `vip`, and
+gave it the Network UUID of the **public** network created near the beginning of
+this walkthrough.  We also associate this floating IP by adding the `floating` network
+directly to the `shield` job, as shown in the above manifest.
 
 (( insert_file shield_deploy.md ))
 (( insert_file bolo_intro.md ))
 Now let's make the manifest.
 
 ```
-$ cd ~/ops/bolo-deployments/us-west-2/proto
+$ cd ~/ops/bolo-deployments/(( insert_parameter site.name ))/proto
 $ make manifest
 
 2 error(s) detected:
@@ -623,38 +620,49 @@ bolo:
 - Networking configuration
 
 According to the [Network Plan][netplan], the bolo deployment belongs in the
-**10.4.1.64/28** network, in zone 1 (a). Let's configure the availability zone in `properties.yml`:
+**10.4.1.64/28** network, in (( insert_parameter site.name )). Let's configure the availability zone in `properties.yml`:
 
 ```
 $ cat properties.yml
 ---
 meta:
-  region: us-west-2
-  az: (( concat meta.region "a" ))
+  az: (( insert_parameter site.name ))
 ```
 
 Since `10.4.1.64/28` is subdivision of the `10.4.1.0/24` subnet, we can configure networking as follows.
+Once again, we add a Floating IP so we can access Gnossis.
 
 ```
 $ cat networking.yml
 ---
 networks:
- - name: bolo
-   type: manual
-   subnets:
-   - range: 10.4.1.0/24
-     gateway: 10.4.1.1
-     cloud_properties:
-       subnet: subnet-xxxxxxxx #<--- your AWS Subnet ID
-       security_groups: [wide-open]
-     dns: [10.4.0.2]
-     reserved:
-       - 10.4.1.2   - 10.4.1.3  # Amazon reserves these
-       - 10.4.1.4 - 10.4.1.63  # Allocated to other deployments
-        # Bolo is in 10.4.1.64/28
-       - 10.4.1.80 - 10.4.1.254 # Allocated to other deployments
-     static:
-       - 10.4.1.65 - 10.4.1.68
+  - name: bolo
+    subnets:
+    - range: 10.4.1.0/24
+      gateway: 10.4.1.1
+      cloud_properties:
+        net_id: b5bfe2d1-fa17-41cc-9928-89013c27e266   #  ID for global-infra-0
+        security_groups: [wide-open]
+      dns: [8.8.8.8, 8.8.4.4]
+      reserved:
+        - 10.4.1.2   - 10.4.1.3
+        - 10.4.1.4 - 10.4.1.63
+         # Bolo is in 10.4.1.64/28
+        - 10.4.1.80 - 10.4.1.254
+      static:
+        - 10.4.1.65 - 10.4.1.68
+  - name: floating
+    type: vip
+    cloud_properties:
+      net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5
+      security_groups: [wide-open]
+
+jobs:
+- name: bolo
+  networks:
+  - name: floating
+    static_ips:
+    - 172.26.75.114
 ```
 
 (( insert_file bolo_test.md ))

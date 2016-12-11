@@ -18,6 +18,7 @@
 		"region": "openvdc-dc01",
 		"jumpbox_ip": "172.26.75.117",
 		"bosh_name": "openvdc",
-		"bosh_dns_ips": "10.4.1.77, 10.4.1.78"
+		"bosh_dns_ips": "10.4.1.77, 10.4.1.78",
+		"shield_fip": "172.26.75.121"
 	}
 }
