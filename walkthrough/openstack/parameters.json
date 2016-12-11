@@ -1,0 +1,23 @@
+{
+	"service": {
+		"short_name": "Openstack",
+		"long_name": "Openstack"
+	},
+	"template_name": "openstack",
+	"cpi_name": "openstack",
+	"site": {
+		"name": "dc01",
+		"description": "Openstack Datacenter"
+	},
+	"stemcell": {
+		"name": "bosh-aws-xen-hvm-ubuntu-trusty-go_agent",
+		"version": "3262.2"
+	},
+	"openstack": {
+		"auth_url": "http://identity.openvdc.lab:5000/v2.0",
+		"region": "openvdc-dc01",
+		"jumpbox_ip": "172.26.75.117",
+		"bosh_name": "openvdc",
+		"bosh_dns_ips": "10.4.1.77, 10.4.1.78"
+	}
+}
