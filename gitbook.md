@@ -20,10 +20,10 @@ Destinations like:
 - A static website that is searchable and displays a TOC.
 - Downloadable PDF, ePub and MOBI formats for eBOOK and computer reading anywhere.
 
-In codex project, we use github to host the repository, use Gitbook to publish
-different formats of codex book. You can go to [codex Gitbook][codex-gitbook]
-to read codex book, click **READ** in the blue box on the right, or download
-different formats of codex book.
+In the codex project, we use github to host the repository, using Gitbook to publish
+different formats of the codex book. You can go to [codex Gitbook][codex-gitbook]
+to read the codex book, click **READ** in the blue box on the right, or download
+different formats of the codex book.
 
 ### Table of Contents
 
@@ -34,26 +34,27 @@ scan the contents of the book and output to the `TOC.md` file.
 ./bin/update_toc
 ```
 
-The instructions for what files to use to scan for and the order to place them
-in are self-contained in the `update_toc` file.  First the `guides` and then the
-`topics`.
+This list of files which are scanned for use as **Guides** or **Topics** is
+defined within `bin/update_toc`.
 
 The **Guides** are long form documents that take operators step-by-step through
-the process of configuring BOSH and Cloud Foundry on a destination infrastructure.
+the process of configuring BOSH and Cloud Foundry on a given infrastructure type
+(AWS, Azure, etc.).
 
 Each of the **Topics** cover specific knowledge on a given topic.
 
-Finally, the order of each guide and topic is done to alphabetize their headings.
+Finally, we order the **Guides** alphabetically, and the **Topics** in natural
+reading order (i.e., troubleshooting at the end).
 
 ### Automated Updates
 
 It is pretty easy how updates work between GitBook and GitHub. You can just make
-your changes, commit and push to the master branch of codex repository, the
-changes will be automatically built by GitBook pipeline. Once the building
-completed, you can see the changes in all the formats of codex GitBook.
+your changes, commit and push to the master branch of the codex repository, the
+changes will be automatically built by GitBook pipeline. Once the build is
+completed, you can see the changes in all the formats of the codex GitBook.
 
-Note: When we make changes to the headings in markdown doc, the table of content
-is not updated until you make corresponding changes in `TOC.md`.
+Note: When making changes to the headings in markdown doc, the table of contents
+is not updated until you make the corresponding changes in `TOC.md`.
 
 ### Accounts
 
@@ -64,7 +65,7 @@ If you’re already signed into GitBook with another account, sign out. Then go
 to https://www.gitbook.com/ and click on SIGN IN. Type in the username:
 `starkandwayne` and put in the password from 1Password.
 
-To set a source repository for codex GitBook, we need to configure a GitHub
+To set a source repository for the codex GitBook, we need to configure a GitHub
 account. Here we  use our `snw-gitbook` GitHub account for the purpose.
 
 ### Collaborators

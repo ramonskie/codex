@@ -59,7 +59,7 @@ variable "aws_route53_prod_hosted_zone_id"    { default = "" } # PROD Hosted Zon
 #
 # The username to log into the nat box is `ec2-user'
 #
-# The regions, in order, are: N Virginia, N California, 
+# The regions, in order, are: N Virginia, N California,
 #   Oregon, Ireland, Frankfurt, Tokyo, Seoul, Singapore,
 #   Sydney, Mumbai, and Sao Paulo.
 
@@ -1467,6 +1467,13 @@ resource "aws_security_group" "cf-ssh-elb" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  egress {
+    from_port   = 2222
+    to_port     = 2222
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 resource "aws_security_group" "openvpn" {
   name = "openvpn"
@@ -1851,6 +1858,14 @@ resource "aws_route53_record" "dev-cf-cname" {
    ttl     = "300"
    records = ["${aws_elb.dev-cf-elb.dns_name}"]
 }
+resource "aws_route53_record" "dev-cf-ssh-cname" {
+   count   = "${var.aws_route53_dev_enabled}"
+   zone_id = "${var.aws_route53_dev_hosted_zone_id}"
+   name    = "ssh.dev"
+   type    = "CNAME"
+   ttl     = "300"
+   records = ["${aws_elb.dev-cf-ssh-elb.dns_name}"]
+}
 
 ###############################################################
 # STAGING-CF-ROUTE53 Route53 CNAME
@@ -1863,6 +1878,14 @@ resource "aws_route53_record" "staging-cf-cname" {
    ttl     = "300"
    records = ["${aws_elb.staging-cf-elb.dns_name}"]
 }
+resource "aws_route53_record" "staging-cf-ssh-cname" {
+   count   = "${var.aws_route53_staging_enabled}"
+   zone_id = "${var.aws_route53_staging_hosted_zone_id}"
+   name    = "ssh.staging"
+   type    = "CNAME"
+   ttl     = "300"
+   records = ["${aws_elb.staging-cf-ssh-elb.dns_name}"]
+}
 
 ###############################################################
 # PROD-CF-ROUTE53 Route53 CNAME
@@ -1874,6 +1897,14 @@ resource "aws_route53_record" "prod-cf-cname" {
    type    = "CNAME"
    ttl     = "300"
    records = ["${aws_elb.prod-cf-elb.dns_name}"]
+}
+resource "aws_route53_record" "prod-cf-ssh-cname" {
+   count   = "${var.aws_route53_prod_enabled}"
+   zone_id = "${var.aws_route53_prod_hosted_zone_id}"
+   name    = "ssh.prod"
+   type    = "CNAME"
+   ttl     = "300"
+   records = ["${aws_elb.prod-cf-ssh-elb.dns_name}"]
 }
 
 

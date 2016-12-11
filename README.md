@@ -32,16 +32,20 @@ your IaaS provider. We have guides for the following:
 - [Google](google.md)
 - [OpenStack](openstack.md)
 
+## Contributing Changes
+To help us make Codex better, please read our [contribution guide](CONTRIB.md) for more details.
+
 ## Offline Reading
 
-The product of this repo is also available for online reading and PDF download
-at [gitbook.com][gitbook].
+The product of this repo is also available for [online
+reading][read] and [in PDF format][download].
 
 Read more about how to use and abuse gitbook tools, plugins, etc. in our [gitbook
 guide](gitbook.md).
 
 [genesis]:   https://github.com/starkandwayne/genesis
-[gitbook]:   https://www.gitbook.com/book/starkandwayne/codex/details
+[read]:      https://starkandwayne.gitbooks.io/codex/content/
+[download]:  https://www.gitbook.com/download/pdf/book/starkandwayne/codex
 [spruce]:    https://github.com/geofffranks/spruce
 [safe]:      https://github.com/starkandwayne/safe
 [terraform]: https://www.terraform.io

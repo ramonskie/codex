@@ -2832,7 +2832,7 @@ $ make deploy
 
 **TODO:** Create the `ccdb`,`uaadb` and `diegodb` databases inside the RDS Instance.
 
-We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSQL database using the following command.
+We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSql database using the following command.
 
 ```
 psql postgres://cfdbadmin:your_password@your_rds_instance_endpoint:5432/postgres
