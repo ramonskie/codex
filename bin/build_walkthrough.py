@@ -56,6 +56,7 @@ buildPath = walkthroughPath + "/.build"
 if not os.path.exists(buildPath):
     os.mkdir(buildPath)
     os.system("cp " + walkthroughPath + "/*.md " + buildPath)
+if not os.path.exists(buildPath + "/" + infra_name):
     os.system("cp -R " + walkthroughPath + "/" + infra_name + " " + buildPath)
 
 # First build, so we can ensure that the product wasn't changed before the source files
