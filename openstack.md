@@ -1259,7 +1259,7 @@ You're also going to want to provision a dedicated bucket to
 store archives in, and name it something descriptive, like
 `codex-backups`.
 
-QUINN:  PLEASE REVIEW AND ADD / CHANGE AS NEEDED.
+QUINN:  Please review and add / change as needed.
 
 ### Deploying SHIELD
 
@@ -1769,7 +1769,7 @@ meta:
   shield_authorized_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
 ```
 
-QUINN:  The following statement is in the AWS instructions.  Shouldn't this be the IP of CF?
+QUINN:  The following statement is in the AWS instructions too.  Shouldn't this be the IP of CF instead of the bastion host?
 
 Be sure to replace the x.x.x.x in the external_url above with the Floating IP address of the bastion host.
 
@@ -1971,22 +1971,17 @@ Created environment dc01/alpha:
 Now lets try to deploy:
 
 ```
-$ cd us-west-2/alpha/
+$ cd dc01/alpha/
 $ make deploy
-  checking https://genesis.starkandwayne.com for details on latest stemcell bosh-aws-xen-hvm-ubuntu-trusty-go_agent
-  checking https://genesis.starkandwayne.com for details on release bosh/256.2
+  checking https://genesis.starkandwayne.com for details on latest stemcell bosh-openstack-kvm-ubuntu-trusty-go_agent
+  checking https://genesis.starkandwayne.com for details on release bosh/260
   checking https://genesis.starkandwayne.com for details on release bosh-warden-cpi/29
-  checking https://genesis.starkandwayne.com for details on release garden-linux/0.339.0
-  checking https://genesis.starkandwayne.com for details on release port-forwarding/2
-8 error(s) detected:
- - $.meta.aws.azs.z1: What Availability Zone will BOSH be in?
- - $.meta.net.dns: What is the IP of the DNS server for this BOSH-Lite?
- - $.meta.net.gateway: What is the gateway of the network the BOSH-Lite will be on?
- - $.meta.net.range: What is the network address of the subnet BOSH-Lite will be on?
- - $.meta.net.reserved: Provide a list of reserved IP ranges for the subnet that BOSH-Lite will be on
- - $.meta.net.security_groups: What security groups should be applied to the BOSH-Lite?
- - $.meta.net.static: Provide a list of static IPs/ranges in the subnet that BOSH-Lite will choose from
- - $.meta.port_forwarding_rules: Define any port forwarding rules you wish to enable on the bosh-lite, or an empty array
+  checking https://genesis.starkandwayne.com for details on release garden-linux/0.342.0
+  checking https://genesis.starkandwayne.com for details on release port-forwarding/6
+  3 error(s) detected:
+   - $.meta.openstack.azs.z1: What Availability Zone will BOSH be in?
+   - $.meta.port_forwarding_rules: Define any port forwarding rules you wish to enable on the bosh-lite, or an empty array
+   - $.networks.default.subnets: Specify subnets for your BOSH vm's network
 
 
 Failed to merge templates; bailing...
@@ -1998,19 +1993,21 @@ make: *** [deploy] Error 3
 
 Looks like we only have a handful of parameters to update, all related to
 networking, so lets fill out our `networking.yml`, after consulting the
-[Network Plan][netplan] to find our global infrastructure network and the AWS
-console to find our subnet ID:
+[Network Plan][netplan] to find our global infrastructure network and Horizon
+to find our Network UUID:
 
 ```
 $ cat networking.yml
 ---
-meta:
-  net:
-    subnet: subnet-xxxxx # <--- your subnet ID here
-    security_groups: [wide-open]
-    range: 10.4.1.0/24
+networks:
+- name: default
+  subnets:
+  - cloud_properties:
+      net_id: b5bfe2d1-fa17-41cc-9928-89013c27e266   #  ID for global-infra-0
+      security_groups: [wide-open]
+    dns:     [8.8.8.8]
     gateway: 10.4.1.1
-    dns: [10.4.0.2]
+    range:   10.4.1.0/24
 ```
 
 Since there are a bunch of other deployments on the infrastructure network, we should take care
@@ -2020,15 +2017,53 @@ that data can be referenced in the [Global Infrastructure IP Allocation section]
 ```
 $ cat networking.yml
 ---
-meta:
-  net:
-    subnet: subnet-xxxxx # <--- your subnet ID here
-    security_groups: [wide-open]
-    range: 10.4.1.0/24
+networks:
+- name: default
+  subnets:
+  - cloud_properties:
+      net_id: b5bfe2d1-fa17-41cc-9928-89013c27e266   #  ID for global-infra-0
+      security_groups: [wide-open]
+    dns:     [8.8.8.8]
     gateway: 10.4.1.1
-    static: [10.4.1.80]
-    reserved: [10.4.1.2 - 10.4.1.79, 10.4.1.96 - 10.4.1.255]
-    dns: [10.4.0.2]
+    range:   10.4.1.0/24
+    reserved:
+      - 10.4.1.2 - 10.4.1.79
+      - 10.4.1.96 - 10.4.1.255
+    static:
+      - 10.4.1.80
+```
+
+As before, we will add the Floating IP so we can access Cloud Foundry when it is deployed to bosh-lite:
+
+```
+networks:
+- name: default
+  subnets:
+  - cloud_properties:
+      net_id: b5bfe2d1-fa17-41cc-9928-89013c27e266   #  ID for global-infra-0
+      security_groups: [wide-open]
+    dns:     [8.8.8.8]
+    gateway: 10.4.1.1
+    range:   10.4.1.0/24
+    reserved:
+      - 10.4.1.2 - 10.4.1.79
+      - 10.4.1.96 - 10.4.1.255
+    static:
+      - 10.4.1.80
+- name: floating
+  type: vip
+  cloud_properties:
+    net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5
+    security_groups: [wide-open]
+
+jobs:
+- name: bosh
+  networks:
+  - name: default
+    default: [gateway, dns]
+  - name: floating
+    static_ips:
+    - 172.26.75.124
 ```
 
 Lastly, we will need to add port-forwarding rules, so that things outside the bosh-lite can talk to its services.
@@ -2038,16 +2073,16 @@ Since we know we will be deploying Cloud Foundry, let's add rules for it:
 $ cat properties.yml
 ---
 meta:
-  aws:
+  openstack:
     azs:
-      z1: us-west-2a
+      z1: dc01
   port_forwarding_rules:
-  - internal_ip: 10.244.0.34
-    internal_port: 80
-    external_port: 80
-  - internal_ip: 10.244.0.34
-    internal_port: 443
-    external_port: 443
+    - internal_ip:   10.244.0.34
+      internal_port: 80
+      external_port: 80
+    - internal_ip:   10.244.0.34
+      internal_port: 443
+      external_port: 443
 ```
 
 And finally, we can deploy again:
@@ -2096,9 +2131,6 @@ Duration	00:03:11
 
 Deployed `dc01-alpha-bosh-lite' to `dc01-proto-bosh'
 ```
-
-
-**NOTE**: If deploying a bosh-release (BOSH in this case) fails from the proto-BOSH to a child environment (different subnet), you might be having [this issue](https://github.com/starkandwayne/codex/issues/64) with a too strict AWS Network ACL (`<vpc name>-hardened`). BOSH will fail with errors such as: `Error 450002: Timed out pinging to ... after 600 seconds`.
 
 Now we can verify the deployment and set up our `bosh` CLI target:
 

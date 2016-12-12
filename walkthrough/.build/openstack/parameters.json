@@ -22,6 +22,7 @@
 		"shield_fip": "172.26.75.121",
 		"bolo_fip": "172.26.75.114",
 		"external_concourse_url": "https://ci.172.26.75.117.sslip.io",
-		"concourse_fip": "172.26.75.115"
+		"concourse_fip": "172.26.75.115",
+		"boshlite_fip": "172.26.75.124"
 	}
 }
