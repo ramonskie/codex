@@ -343,7 +343,7 @@ Full name: Joe User
 Username:  juser
 Enter the public key for this user's .ssh/authorized_keys file:
 You should run `jumpbox user` now, as juser:
-  su - juser  
+  su - juser
   jumpbox user
 ```
 
@@ -1880,6 +1880,7 @@ meta:
   external_url: "https://ci.x.x.x.x.sslip.io"  # Set as Elastic IP address of the bastion host to allow testing via SSH tunnel
   ssl_pem: ~
   #  ssl_pem: (( vault meta.vault_prefix "/web_ui:pem" ))
+  shield_authorized_key: (( vault "secret/us-west-2/proto/shield/keys/core:public" ))
 ```
 
 Be sure to replace the x.x.x.x in the external_url above with the Elastic IP address of the bastion host.
