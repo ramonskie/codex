@@ -343,7 +343,7 @@ Full name: Joe User
 Username:  juser
 Enter the public key for this user's .ssh/authorized_keys file:
 You should run `jumpbox user` now, as juser:
-  su - juser
+  su - juser 
   jumpbox user
 ```
 
