@@ -343,7 +343,7 @@ Full name: Joe User
 Username:  juser
 Enter the public key for this user's .ssh/authorized_keys file:
 You should run `jumpbox user` now, as juser:
-  su - juser  
+  su - juser 
   jumpbox user
 ```
 
@@ -1880,6 +1880,7 @@ meta:
   external_url: "https://ci.x.x.x.x.sslip.io"  # Set as Elastic IP address of the bastion host to allow testing via SSH tunnel
   ssl_pem: ~
   #  ssl_pem: (( vault meta.vault_prefix "/web_ui:pem" ))
+  shield_authorized_key: (( vault "secret/us-west-2/proto/shield/keys/core:public" ))
 ```
 
 Be sure to replace the x.x.x.x in the external_url above with the Elastic IP address of the bastion host.
@@ -2832,7 +2833,7 @@ $ make deploy
 
 **TODO:** Create the `ccdb`,`uaadb` and `diegodb` databases inside the RDS Instance.
 
-We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSql database using the following command.
+We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSQL database using the following command.
 
 ```
 psql postgres://cfdbadmin:your_password@your_rds_instance_endpoint:5432/postgres
