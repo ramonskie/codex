@@ -101,9 +101,30 @@ resource "openstack_networking_secgroup_v2" "wide-open" {
 resource "openstack_networking_secgroup_rule_v2" "wide-open_ingress" {
   direction = "ingress"
   ethertype = "IPv4"
-  protocol = "icmp"                   # Required if specifying port range
-  region = "${var.region}" 
+  region = "${var.region}"
   remote_ip_prefix = "0.0.0.0/0"
+  security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
+}
+
+resource "openstack_networking_secgroup_rule_v2" "wide-open_ingress-IPv6" {
+  direction = "ingress"
+  ethertype = "IPv6"
+  region = "${var.region}"
+  security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
+}
+
+resource "openstack_networking_secgroup_rule_v2" "wide-open_egress" {
+  direction = "egress"
+  ethertype = "IPv4"
+  region = "${var.region}"
+  remote_ip_prefix = "0.0.0.0/0"
+  security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
+}
+
+resource "openstack_networking_secgroup_rule_v2" "wide-open_egress-IPv6" {
+  direction = "egress"
+  ethertype = "IPv6"
+  region = "${var.region}"
   security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
 }
 
@@ -603,3 +624,41 @@ EOF
     volume_id = "${openstack_blockstorage_volume_v2.volume_bastion.id}"
   }
 }
+
+resource "openstack_networking_router_interface_v2" "dev-cf-edge-0-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-0-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-edge-1-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-1-subnet.id}"
+}
+
+######################################
+#         Load Balancers
+######################################
+
+#resource "openstack_lb_loadbalancer_v2" "dev-loadbalancer" {
+#  region = "${var.region}"
+#  name = "dev-loadbalancer"
+#  vip_subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-0-subnet.id}"
+#  vip_address = "${var.network}.19.120"
+#}
+#
+#resource "openstack_lb_pool_v2" "dev-pool" {
+#  region = "${var.region}"
+#  name = "dev-pool"
+#  protocol = "HTTP"
+#  lb_method = "ROUND_ROBIN"
+#  loadbalancer_id = "${openstack_lb_loadbalancer_v2.dev-loadbalancer.id}"
+#}
+#
+#resource "openstack_lb_listener_v2" "dev-listener" {
+#  region = "${var.region}"
+#  name = "dev-listener"
+#  protocol = "HTTP"
+#  protocol_port = 8080
+#  loadbalancer_id = "${openstack_lb_loadbalancer_v2.dev-loadbalancer.id}"
+#  default_pool_id = "${openstack_lb_pool_v2.dev-pool.id}"
+#}
