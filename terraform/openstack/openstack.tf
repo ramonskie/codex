@@ -275,6 +275,7 @@ output "openstack_networking_network_v2.global-openvpn-1.global-openvpn-1-subnet
 
 ######## Development ##########
 
+########  DEV-INFRA  ##########
 
 resource "openstack_networking_network_v2" "dev-infra-0" {
   name = "dev-infra-0"
@@ -454,6 +455,95 @@ output "openstack_networking_network_v2.dev-cf-runtime-2.dev-cf-runtime-2-subnet
   value = "${openstack_networking_subnet_v2.dev-cf-runtime-2-subnet.id}"
 }
 
+######## DEV-CF-SERVICES #########
+
+resource "openstack_networking_network_v2" "dev-cf-svcs-0" {
+  name = "dev-cf-svcs-0"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-svcs-0-subnet" {
+  name = "dev-cf-svcs-0-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-svcs-0.id}"
+  cidr = "${var.network}.26.0/24"
+}
+
+output "openstack_networking_network_v2.dev-cf-svcs-0.dev-cf-svcs-0-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-svcs-0-subnet.id}"
+}
+
+resource "openstack_networking_network_v2" "dev-cf-svcs-1" {
+  name = "dev-cf-svcs-1"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-svcs-1-subnet" {
+  name = "dev-cf-svcs-1-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-svcs-1.id}"
+  cidr = "${var.network}.27.0/24"
+}
+
+output "openstack_networking_network_v2.dev-cf-svcs-1.dev-cf-svcs-1-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-svcs-1-subnet.id}"
+}
+
+resource "openstack_networking_network_v2" "dev-cf-svcs-2" {
+  name = "dev-cf-svcs-2"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-svcs-2-subnet" {
+  name = "dev-cf-svcs-2-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-svcs-2.id}"
+  cidr = "${var.network}.28.0/24"
+}
+
+output "openstack_networking_network_v2.dev-cf-svcs-2.dev-cf-svcs-2-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-svcs-2-subnet.id}"
+}
+
+######## DEV-CF-DATABASE #########
+
+resource "openstack_networking_network_v2" "dev-cf-db-0" {
+  name = "dev-cf-db-0"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-db-0-subnet" {
+  name = "dev-cf-db-0-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-db-0.id}"
+  cidr = "${var.network}.29.0/28"
+}
+
+output "openstack_networking_network_v2.dev-cf-db-0.dev-cf-db-0-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-db-0-subnet.id}"
+}
+
+resource "openstack_networking_network_v2" "dev-cf-db-1" {
+  name = "dev-cf-db-1"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-db-1-subnet" {
+  name = "dev-cf-db-1-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-db-1.id}"
+  cidr = "${var.network}.29.16/28"
+}
+
+output "openstack_networking_network_v2.dev-cf-db-1.dev-cf-db-1-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-db-1-subnet.id}"
+}
+
+resource "openstack_networking_network_v2" "dev-cf-db-2" {
+  name = "dev-cf-db-2"
+}
+
+resource "openstack_networking_subnet_v2" "dev-cf-db-2-subnet" {
+  name = "dev-cf-db-2-subnet"
+  network_id = "${openstack_networking_network_v2.dev-cf-db-2.id}"
+  cidr = "${var.network}.29.32/28"
+}
+
+output "openstack_networking_network_v2.dev-cf-db-2.dev-cf-db-2-subnet.subnet" {
+  value = "${openstack_networking_subnet_v2.dev-cf-db-2-subnet.id}"
+}
+
+
 ###############################
 #           Routers
 ###############################
@@ -574,14 +664,34 @@ resource "openstack_networking_router_interface_v2" "dev-cf-core-2-to-pub" {
   subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-2-subnet.id}"
 }
 
-resource "openstack_networking_router_interface_v2" "dev-cf-edge-0-to-pub" {
+resource "openstack_networking_router_interface_v2" "dev-cf-svcs-0-to-pub" {
   router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
-  subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-0-subnet.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-svcs-0-subnet.id}"
 }
 
-resource "openstack_networking_router_interface_v2" "dev-cf-edge-1-to-pub" {
+resource "openstack_networking_router_interface_v2" "dev-cf-svcs-1-to-pub" {
   router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
-  subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-1-subnet.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-svcs-1-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-svcs-2-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-svcs-2-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-db-0-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-db-0-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-db-1-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-db-1-subnet.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "dev-cf-db-2-to-pub" {
+  router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
+  subnet_id = "${openstack_networking_subnet_v2.dev-cf-db-2-subnet.id}"
 }
 
 ###############################
@@ -634,31 +744,3 @@ resource "openstack_networking_router_interface_v2" "dev-cf-edge-1-to-pub" {
   router_id = "${openstack_networking_router_v2.dev-to-pub.id}"
   subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-1-subnet.id}"
 }
-
-######################################
-#         Load Balancers
-######################################
-
-#resource "openstack_lb_loadbalancer_v2" "dev-loadbalancer" {
-#  region = "${var.region}"
-#  name = "dev-loadbalancer"
-#  vip_subnet_id = "${openstack_networking_subnet_v2.dev-cf-edge-0-subnet.id}"
-#  vip_address = "${var.network}.19.120"
-#}
-#
-#resource "openstack_lb_pool_v2" "dev-pool" {
-#  region = "${var.region}"
-#  name = "dev-pool"
-#  protocol = "HTTP"
-#  lb_method = "ROUND_ROBIN"
-#  loadbalancer_id = "${openstack_lb_loadbalancer_v2.dev-loadbalancer.id}"
-#}
-#
-#resource "openstack_lb_listener_v2" "dev-listener" {
-#  region = "${var.region}"
-#  name = "dev-listener"
-#  protocol = "HTTP"
-#  protocol_port = 8080
-#  loadbalancer_id = "${openstack_lb_loadbalancer_v2.dev-loadbalancer.id}"
-#  default_pool_id = "${openstack_lb_pool_v2.dev-pool.id}"
-#}
