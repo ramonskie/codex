@@ -12,7 +12,7 @@ Like stated, we will be using Option 2, the fully configurable DevStack. We will
 
 ## Deploying DevStack
 
-#### DevStack on a Machine
+#### DevStack on a Dedicated Linux Machine
 So to get started, you will need a dedicated Linux machine - I have an HP laptop with 16GB of RAM which runs it fine. To begin, you will need to be connected to an ethernet cord and know the network interface name for it, and you have to configure/know your IP address on your network. Ethernet cable I can't help you out much with, but to figure out the network interface, run the following command. Chances are it will either be `eth0` or `eno1`.
 
 ```bash
@@ -36,6 +36,8 @@ wlo1      Link encap:Ethernet  HWaddr d0:7e:35:a0:33:d6
           RX bytes:9339 (9.3 KB)  TX bytes:10114 (10.1 KB)
 ```
 
+#### DevStack on a Virtual Machine 
+  You can also run Devstack on a Virtual Machine. For example, we have lab workstation running Windows 10. Allocating 16GB or more of ram and a sizeable virtual disk to an instance of one of the supported plantforms (Ubuntu, Centos, etc..) dev stack will run quite happily with the bonus that it's easy to back up and move your entire lab environment. 
 
 #### DevStack Setup
 To actually get DevStack running, we will need to pull the repository. *Note that you will need a user with sudo priviledges for the process to work.*
