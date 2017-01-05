@@ -22,6 +22,12 @@ $ brew tap starkandwayne/cf
 $ brew install spruce genesis safe terraform
 ```
 
+Alternatively, If you've already installed these, it's a good idea to make sure they are up to date. 
+
+```
+brew upgrade  spruce genesis safe terraform
+```
+
 ## Get Started
 
 To get started with a best practices Codex deployment, you'll want to choose
