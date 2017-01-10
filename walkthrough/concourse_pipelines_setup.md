@@ -110,8 +110,8 @@ We can tackle all the errors by configuring two files: `ci/boshes.yml` and `ci/s
 To generate an SSH key pair, use the following commands to write it to Vault. In the git repo, add the pub key to the deploy key.
 
 ```
-safe write path "private_key_name@private_key_file"
-safe write path "pub_key_name@pub_key_file"
+safe write secret/(( insert_parameter site.name ))/proto/concourse/deployment_keys "private_key_name@private_key_file"
+safe write secret/(( insert_parameter site.name ))/proto/concourse/deployment_keys "pub_key_name@pub_key_file"
 
 ```
 
@@ -128,10 +128,13 @@ aliases:
 auth:
   https://x.x.x.x:25555:
     username: admin
-    password: (( vault "path to bosh admin secret" ))
+    password: (( vault "path to your bosh admin secret" ))
   https://x.x.x.x:25555:
     username: admin
-    password: (( vault "path to bosh admin secret" ))
+    password: (( vault "path to your bosh admin secret" ))
+  https://x.x.x.x:25555:
+    username: admin
+    password: (( vault "path to your bosh admin secret" ))
 
 ```
 
