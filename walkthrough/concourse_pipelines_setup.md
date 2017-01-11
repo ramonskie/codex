@@ -156,6 +156,12 @@ meta:
     channel: '#your_channel name'
 
 ```
+### Adding Smoke Tests to Pipeline
+
+If the deployment you set up pipeline for has a smoke tests errand, you can add smoke tests errand to your existing pipeline pretty easily by following the instruction below:
+
+First,  run `genesis ci smoke-test your_smoke_tests_errand_name`, then run `genesi ci repipe`, you will be prompted for a `y` or `N` in “apply configuration? [yN]:”, type `y` and your pipeline configuration is updated.
+
 ### Authentication Management for Teams
 
 To be continued: how to manage authentication for teams. For main team ,how we use Github oAuth instead of Basic Auth.
