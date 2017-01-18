@@ -692,17 +692,17 @@ $ cat properties.yml
 ---
 meta:
   availability_zone: "dc01"   # Set this to match your first zone
-  external_url: "(( insert_parameter openstack.external_concourse_url ))"  # Set as Elastic IP address of the bastion host to allow testing via SSH tunnel
+  external_url: "(( insert_parameter openstack.external_concourse_url ))"  # Set as Elastic IP address of the Haproxy instance
   ssl_pem: ~
-  #  ssl_pem: (( vault meta.vault_prefix "/web_ui:pem" ))
+  #  ssl_pem: (( vault meta.vault_prefix "/certs/haproxy:your_haproxy_domain" ))
   shield_authorized_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
 ```
 
-QUINN:  The following statement is in the AWS instructions too.  Shouldn't this be the IP of CF instead of the bastion host?
+The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault as the commented line for ssl_pem showed.
 
-Be sure to replace the x.x.x.x in the external_url above with the Floating IP address of the bastion host.
+To generate self signed certs, you can follow the instruction as belows:
 
-The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under the `web_ui:pem` key
+(( insert_file create_concourse_haproxy_certs.md ))
 
 For networking, we put this inside `proto` environment level.
 
