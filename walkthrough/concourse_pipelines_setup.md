@@ -11,7 +11,7 @@ genesis ci alpha site/env
 genesis ci beta  site/env
 genesis ci manual(or auto) site/env
 ```
-Then simply run `genesis ci check` to see if everything is set up correctly and use `genesis ci flow` to review that if the pipeline flows are correct.
+Then simply run `genesis ci check` to see if everything is setup correctly and use `genesis ci flow` to review that if the pipeline flows are correct.
 
 ### Set Up Vault
 
@@ -70,9 +70,11 @@ Set the fly target as `concourse`. If we do not use `concourse` as target name, 
 
 `fly -t concourse login -c concourse_url`
 
-You will be prompted for the user and password.  If you do not specify a team name, the CLI will log you into the default `main` team.
+You will be prompted for the user and password. The user name is `concourse` and the password is saved in `secret/(( insert_parameter site.name ))/proto/concourse/web_ui` in vault.  If you do not specify a team name, the CLI will log you into the default `main` team.
 
 In this case, we are using Basic Auth.  For details on how to set up oAuth for your team, see [Authentication Management for Teams](#authentication-management-for-teams)
+
+To learn more about how to use the `fly` managing your pipelines, click [here][fly].
 
 ### Configure and Generate Pipelines
 
@@ -110,8 +112,8 @@ We can tackle all the errors by configuring two files: `ci/boshes.yml` and `ci/s
 To generate an SSH key pair, use the following commands to write it to Vault. In the git repo, add the pub key to the deploy key.
 
 ```
-safe write path "private_key_name@private_key_file"
-safe write path "pub_key_name@pub_key_file"
+safe write secret/(( insert_parameter site.name ))/proto/concourse/deployment_keys "private_key_name@private_key_file"
+safe write secret/(( insert_parameter site.name ))/proto/concourse/deployment_keys "pub_key_name@pub_key_file"
 
 ```
 
@@ -128,10 +130,13 @@ aliases:
 auth:
   https://x.x.x.x:25555:
     username: admin
-    password: (( vault "path to bosh admin secret" ))
+    password: (( vault "path to your bosh admin secret" ))
   https://x.x.x.x:25555:
     username: admin
-    password: (( vault "path to bosh admin secret" ))
+    password: (( vault "path to your bosh admin secret" ))
+  https://x.x.x.x:25555:
+    username: admin
+    password: (( vault "path to your bosh admin secret" ))
 
 ```
 
@@ -153,6 +158,24 @@ meta:
     channel: '#your_channel name'
 
 ```
+After `genesis ci repipe` succeeds, follow the instructions it prints out to unpause your pipeline.
+
+Note: We should never modify `ci/pipeline.yml` directly. `genesis ci repipe` will take what are in `.ci.yml`,` ci/settings.yml` and ` ci/boshes.yml` to generate `ci/pipeline.yml`.
+
+### Adding Smoke Tests to Pipeline
+
+If the deployment you set up pipeline for has a smoke tests errand, you can add smoke tests errand to your existing pipeline pretty easily by following the instruction below:
+
+First,  run `genesis ci smoke-test your_smoke_tests_errand_name`, then run `genesi ci repipe`, you will be prompted for a `y` or `N` in “apply configuration? [yN]:”, type `y` and your pipeline configuration is updated.
+
+### How to Use Concourse UI
+
+Visit http://x.x.x.x.sslip.io in your browser, where `x.x.x.x` is the IP of the haproxy VM. You will see "*no pipelines configured" in the middle of your screen. Click the login button on the top right, choose the main team to login. The username and password is the same with what you used when you run `fly -t concourse login -c concourse_url`. After you login, you will see the pipelines listed on the left you already configured as the main team. You can click the pipeline name to look at the specific jobs in rectangle boxes of that pipeline.
+
+Click each rectangle, you can see the builds, tasks and other details about the corresponding job. To trigger a job manually, you can click the plus button on the right corner for that job. We recommend that the jobs which deploy to production environment should be manually triggered and all other jobs can be triggered automatically when the changes are pushed to the git repository.
+
 ### Authentication Management for Teams
 
 To be continued: how to manage authentication for teams. For main team ,how we use Github oAuth instead of Basic Auth.
+
+[fly]: https://concourse.ci/fly-cli.html
