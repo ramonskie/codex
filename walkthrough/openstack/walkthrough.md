@@ -37,7 +37,7 @@ used to get access to the Openstack Services by BOSH.  Next, we'll need to creat
 and is the SSH key you'll use to connect from your local machine to the bastion.
 
 **NOTE**: Make sure you are in the correct project (top-left corner of the Horizon
-UI) when you create your **EC2 Key Pair**. Otherwise, it just plain won't
+UI) when you create your **OpenStack Key Pair**. Otherwise, it just plain won't
 work.
 
 1. Log into Horizon as the user that has admin access to the project in question.
@@ -150,7 +150,7 @@ doc for help.
 ### Connect to Bastion
 
 You'll use the **Key Pair** `*.pem` or `ssh-keygen` generated file that was stored from the
-[Generate EC2 Key Pair](openstack.md#generate-openstack-key-pair) step before as your credential
+[Generate OpenStack Key Pair](openstack.md#generate-openstack-key-pair) step before as your credential
 to connect.
 
 In forming the SSH connection command, use the `-i` flag to give SSH the path to
@@ -244,7 +244,7 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Better. Let's configure our `cloud_provider` for Openstack, using our EC2 key pair.
+Better. Let's configure our `cloud_provider` for Openstack, using our OpenStack key pair.
 We need copy our private key to the bastion host and path to the key for the
 `private_key` entry in the following `properties.yml`.
 
@@ -520,8 +520,6 @@ You're also going to want to provision a dedicated bucket to
 store archives in, and name it something descriptive, like
 `codex-backups`.
 
-QUINN:  Please review and add / change as needed.
-
 (( insert_file shield_setup.md ))
 Next, we `make manifest` and see what we need to fill in.
 ```
@@ -575,7 +573,6 @@ networks:
     cloud_properties:
       net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5     # ID for public
       security_groups: [wide-open]
-
 jobs:
 - name: shield
   networks:
@@ -698,7 +695,7 @@ meta:
   shield_authorized_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
 ```
 
-QUINN:  The following statement is in the AWS instructions too.  Shouldn't this be the IP of CF instead of the bastion host?
+TODO:  The following statement is in the AWS instructions too.  Shouldn't this be the IP of CF instead of the bastion host?
 
 Be sure to replace the x.x.x.x in the external_url above with the Floating IP address of the bastion host.
 
@@ -831,7 +828,6 @@ networks:
   cloud_properties:
     net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5
     security_groups: [wide-open]
-
 jobs:
 - name: bosh
   networks:
@@ -868,22 +864,7 @@ meta:
 Let's try to deploy now, and see what information still needs to be resolved:
 
 ```
-$ cd us-west-2/staging
-$ make deploy
-9 error(s) detected:
- - $.meta.aws.access_key: Please supply an AWS Access Key
- - $.meta.aws.azs.z1: What Availability Zone will BOSH be in?
- - $.meta.aws.default_sgs: What security groups should VMs be placed in, if none are specified in the deployment manifest?
- - $.meta.aws.private_key: What private key will be used for establishing the ssh_tunnel (bosh-init only)?
- - $.meta.aws.region: What AWS region are you going to use?
- - $.meta.aws.secret_key: Please supply an AWS Secret Key
- - $.meta.aws.ssh_key_name: What AWS keypair should be used for the vcap user?
- - $.meta.shield_public_key: Specify the SSH public key from this environment's SHIELD daemon
- - $.networks.default.subnets: Specify subnets for your BOSH vm's network
-
-
-Failed to merge templates; bailing...
-make: *** [deploy] Error 3
+TODO: Insert Openstack Template key Errors Here
 ```
 
 Looks like we need to provide the same type of data as we did for **proto-BOSH**. Lets fill in the basic properties:
@@ -892,16 +873,28 @@ Looks like we need to provide the same type of data as we did for **proto-BOSH**
 $ cat > properties.yml <<EOF
 ---
 meta:
-  aws:
-    region: us-west-2
-    azs:
-      z1: (( concat meta.aws.region "a" ))
-    access_key: (( vault "secret/us-west-2:access_key" ))
-    secret_key: (( vault "secret/us-west-2:secret_key" ))
-    private_key: ~ # not needed, since not using bosh-lite
-    ssh_key_name: your-ec2-keypair-name
-    default_sgs: [wide-open]
-  shield_public_key: (( vault "secret/us-west-2/proto/shield/keys/core:public" ))
+  openstack:
+    api_key:  (( vault meta.vault_prefix "/openstack:api_key" ))
+    tenant:   (( vault meta.vault_prefix "/openstack:tenant" ))
+    username: (( vault meta.vault_prefix "/openstack:username" ))
+    auth_url: http://identity.openvdc.lab:5000/v2.0
+    region: openvdc-dc01
+cloud_provider:
+  properties:
+    openstack:
+      default_key_name: bosh
+      connection_options:
+        connect_timeout: 600
+      ignore_server_availability_zone: true
+  ssh_tunnel:
+    host: (( grab jobs.bosh.networks.default.static_ips.0 ))
+    private_key: ~/.ssh/bosh
+properties:
+  bolo:
+    submission:
+      address: 10.4.1.65
+    collectors:
+      - { every: 20s, run: 'linux' }
 EOF
 ```
 
@@ -930,18 +923,35 @@ $ cat > networking.yml <<EOF
 networks:
   - name: default
     subnets:
-      - range:    10.4.32.0/24
-        gateway:  10.4.32.1
-        dns:     [10.4.0.2]
+      - range: 10.4.16.0/24
+        gateway: 10.4.16.1
+        dns: [10.4.1.77, 10.4.1.78]
         cloud_properties:
-          subnet: subnet-xxxxxxxx # <-- the AWS Subnet ID for your staging-infra-0 network
-          security_groups: [wide-open]
+          net_id: 20c35573-3a0c-4725-95a2-b58550407fcf # <- Global-Infra-0 Network UUID
         reserved:
-          - 10.4.32.2 - 10.4.32.3    # Amazon reserves these
-            # BOSH is in 10.4.32.0/28
-          - 10.4.32.16 - 10.4.32.254 # Allocated to other deployments
+          - 10.4.16.2 - 10.4.16.3
+          - 10.4.16.10 - 10.4.16.254
         static:
-          - 10.4.32.4
+          - 10.4.16.4
+  - name: floating
+    type: vip
+    cloud_properties:
+      net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5
+      security_groups: [wide-open]
+ 
+jobs:
+  - name: bosh
+    networks:
+    - name: default
+      static_ips: (( static_ips(0) ))
+    - name: floating
+      static_ips:
+      - 172.26.75.122
+
+cloud_provider:
+  properties:
+    openstack:
+      default_security_groups: [default]
 EOF
 ```
 
@@ -956,88 +966,7 @@ $ make manifest
 ```
 
 ```
-76 error(s) detected:
- - $.meta.azs.z1: What availability zone should the *_z1 vms be placed in?
- - $.meta.azs.z2: What availability zone should the *_z2 vms be placed in?
- - $.meta.azs.z3: What availability zone should the *_z3 vms be placed in?
- - $.meta.cf.base_domain: Enter the Cloud Foundry base domain
- - $.meta.cf.blobstore_config.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
- - $.meta.cf.blobstore_config.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
- - $.meta.cf.blobstore_config.fog_connection.region: Which region are the blobstore S3 buckets in?
- - $.meta.cf.ccdb.host: What hostname/IP is the ccdb available at?
- - $.meta.cf.ccdb.pass: Specify the password of the ccdb user
- - $.meta.cf.ccdb.user: Specify the user to connect to the ccdb
- - $.meta.cf.diegodb.host: What hostname/IP is the diegodb available at?
- - $.meta.cf.diegodb.pass: Specify the password of the diegodb user
- - $.meta.cf.diegodb.user: Specify the user to connect to the diegodb
- - $.meta.cf.uaadb.host: What hostname/IP is the uaadb available at?
- - $.meta.cf.uaadb.pass: Specify the password of the uaadb user
- - $.meta.cf.uaadb.user: Specify the user to connect to the uaadb
- - $.meta.dns: Enter the DNS server for your VPC
- - $.meta.elbs: What elbs will be in front of the gorouters?
- - $.meta.router_security_groups: Enter the security groups which should be applied to the gorouter VMs
- - $.meta.security_groups: Enter the security groups which should be applied to CF VMs
- - $.meta.ssh_elbs: What elbs will be in front of the ssh-proxy (access_z*) nodes?
- - $.networks.cf1.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.cf1.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.cf1.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.cf1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.cf1.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.cf2.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.cf2.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.cf2.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.cf2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.cf2.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.cf3.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.cf3.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.cf3.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.cf3.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.cf3.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.router1.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.router1.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.router1.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.router1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.router1.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.router2.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.router2.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.router2.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.router2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.router2.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.runner1.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.runner1.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.runner1.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.runner1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.runner1.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.runner2.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.runner2.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.runner2.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.runner2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.runner2.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.runner3.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.runner3.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.runner3.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.runner3.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.runner3.subnets.0.static: Enter the static IP ranges for this subnet
- - $.properties.cc.buildpacks.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
- - $.properties.cc.buildpacks.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
- - $.properties.cc.buildpacks.fog_connection.region: Which region are the blobstore S3 buckets in?
- - $.properties.cc.droplets.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
- - $.properties.cc.droplets.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
- - $.properties.cc.droplets.fog_connection.region: Which region are the blobstore S3 buckets in?
- - $.properties.cc.packages.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
- - $.properties.cc.packages.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
- - $.properties.cc.packages.fog_connection.region: Which region are the blobstore S3 buckets in?
- - $.properties.cc.resource_pool.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
- - $.properties.cc.resource_pool.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
- - $.properties.cc.resource_pool.fog_connection.region: Which region are the blobstore S3 buckets in?
- - $.properties.cc.security_group_definitions.load_balancer.rules: Specify the rules for allowing access for CF apps to talk to the CF Load Balancer External IPs
- - $.properties.cc.security_group_definitions.services.rules: Specify the rules for allowing access to CF services subnets
- - $.properties.cc.security_group_definitions.user_bosh_deployments.rules: Specify the rules for additional BOSH user services that apps will need to talk to
-
-
-Failed to merge templates; bailing...
-Makefile:22: recipe for target 'manifest' failed
-make: *** [manifest] Error 5
+TODO:  INSERT OPENSTACK ERRORS HERE
 ```
 
 Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those (no need to create the blobstore S3 buckets yourself):
@@ -1046,386 +975,210 @@ Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the
 $ cat properties.yml
 ---
 meta:
+  type: cf
+  site: (( insert_parameter site.name ))
+  env: dev
   skip_ssl_validation: true
+
   cf:
+    base_domain: (( insert_parameter cf_beta.base_domain ))
+    directory_key_prefix: (( insert_parameter cf_beta.directory_key_prefix ))
     blobstore_config:
       fog_connection:
-        aws_access_key_id: (( vault "secret/us-west-2:access_key" ))
-        aws_secret_access_key: (( vault "secret/us-west-2:secret_key" ))
-        region: us-west-2
-```
-
-##### Setup RDS Database
-
-Next, lets tackle the database situation. We will need to create RDS instances for the `uaadb` and `ccdb`, but first we need to generate a password for the RDS instances:
-
-```
-$ safe gen 40 secret/us-west-2/staging/cf/rds password
-$ safe get secret/us-west-2/staging/cf/rds
---- # secret/us-west-2/staging/rds
-password: pqzTtCTz7u32Z8nVlmvPotxHsSfTOvawRjnY7jTW
-```
-
-Now let's go back to the `terraform/aws` sub-directory of this repository and add to the `aws.tfvars` file the following configurations:
-
-```
-aws_rds_staging_enabled = "1"
-aws_rds_staging_master_password = "<insert the generated RDS password>"
-```
-
-As a quick pre-flight check, run `make manifest` to compile your Terraform plan, a RDS Cluster and 3 RDS Instances should be created:
-
-```
-$ make manifest
-terraform get -update
-terraform plan -var-file aws.tfvars -out aws.tfplan
-Refreshing Terraform state in-memory prior to plan...
-
-...
-
-Plan: 4 to add, 0 to change, 0 to destroy.
-```
-
-If everything worked out you, deploy the changes:
-
-```
-$ make deploy
-```
-
-**TODO:** Create the `ccdb`,`uaadb` and `diegodb` databases inside the RDS Instance.
-
-We will manually create uaadb, ccdb and diegodb for now. First, connect to your PostgreSQL database using the following command.
-
-```
-psql postgres://cfdbadmin:your_password@your_rds_instance_endpoint:5432/postgres
-```
-
-Then run `create database uaadb`, `create database ccdb` and `create database diegodb`. You also need to `create extension citext` on all of your databases.
-
-Now that we have RDS instance and `ccdb`, `uaadb` and `diegodb` databases created inside it, lets refer to them in our `properties.yml` file:
-
-```
-cat properties.yml
----
-meta:
-  skip_ssl_validation: true
-  cf:
-    blobstore_config:
-      fog_connection:
-        aws_access_key_id: (( vault "secret/us-west-2:access_key" ))
-        aws_secret_access_key: (( vault "secret/us-west-2:secret_key" ))
-        region: us-east-1
-    ccdb:
-      host: "xxxxxx.rds.amazonaws.com" # <- your RDS Instance endpoint
-      user: "cfdbadmin"
-      pass: (( vault "secret/us-west-2/staging/cf/rds:password" ))
-      scheme: postgres
-      port: 5432
-    uaadb:
-      host: "xxxxxx.rds.amazonaws.com" # <- your RDS Instance endpoint
-      user: "cfdbadmin"
-      pass: (( vault "secret/us-west-2/staging/cf/rds:password" ))
-      scheme: postgresql
-      port: 5432
-    diegodb:
-      host: "xxxxxx.rds.amazonaws.com" # <- your RDS Instance endpoint
-      user: "cfdbadmin"
-      pass: (( vault "secret/us-west-2/staging/cf/rds:password" ))
-      scheme: postgres
-      port: 5432
+        aws_access_key_id: (( vault "secret/s3:access_key" ))
+        aws_secret_access_key: (( vault "secret/s3:secret_key" ))
+        scheme: http
+        # host: (( get "object." + meta.openstack.domain ))
+        host: 172.26.73.168
+        port: 8080
+        # Required
+        path_style: true
+        # v4 is buggy at the moment, stick with v2 for now
+        aws_signature_version: 2
+        provider: "AWS"
+        #region: (( insert_parameter site.name ))
 properties:
-  diego:
-    bbs:
-      sql:
-        db_driver: postgres
-        db_connection_string: (( concat "postgres://" meta.cf.diegodb.user ":" meta.cf.diegodb.pass "@" meta.cf.diegodb.host ":" meta.cf.diegodb.port "/" meta.cf.diegodb.dbname ))
+  bolo:
+    submission:
+      address: 10.4.1.65
+    collectors:
+      - { every: 20s, run: 'linux' }
+  loggregator:
+    servers:
+    - 10.4.20.105
+  loggregator_endpoint:
+    host: 10.4.20.105 # TODO: consul/dns/LB ???
+    port: 3456
+```
+
+Also, let's fill out `scaling.yml` so we can more easily scale out our Availability Zones and jobs:
 
 ```
-We have to configure `db_driver` and `db_connection_string` for diego since the templates we use is MySQL and we are using PostgreSQL here.
+meta:
+  azs:
+    z1: dc01
+    z2: dc01
+    z3: dc01
+jobs:
+ - name: access_z1
+   instances: 1
+ - name: access_z2
+   instances: 0
+ - name: api_z1
+   instances: 1
+ - name: api_z2
+   instances: 0
+ - name: brain_z1
+   instances: 1
+ - name: brain_z2
+   instances: 0
+ - name: cc_bridge_z1
+   instances: 1
+ - name: cc_bridge_z2
+   instances: 0
+ - name: cell_z1
+   instances: 1
+ - name: cell_z2
+   instances: 0
+ - name: doppler_z1
+   instances: 1
+ - name: doppler_z2
+   instances: 0
+ - name: loggregator_trafficcontroller_z1
+   instances: 1
+ - name: loggregator_trafficcontroller_z2
+   instances: 0
+ - name: route_emitter_z1
+   instances: 1
+ - name: route_emitter_z2
+   instances: 0
+ - name: router_z1
+   instances: 1
+ - name: router_z2
+   instances: 0
+ - name: stats
+   instances: 1
+ - name: uaa_z1
+   instances: 1
+ - name: uaa_z2
+   instances: 0
+```
 
+In addition, let us generate our self-signed certificates for CF:
 (( insert_file beta_cf_cacert.md ))
-Now let's go back to the `terraform/aws` sub-directory of this repository and add to the `aws.tfvars` file the following configurations:
-
-```
-aws_elb_staging_enabled = "1"
-aws_elb_staging_cert_path = "/path/to/the/signed/domain/certificate.crt"
-aws_elb_staging_private_key_path = "/path/to/the/domain/private.key"
-```
-
-As a quick pre-flight check, run `make manifest` to compile your Terraform plan. If everything worked out you, deploy the changes:
-
-```
-$ make deploy
-```
-
-From here we need to configure our domain to point to the ELB. Different clients may use different DNS servers. No matter which DNS server you are using, you will need add two CNAME records, one that maps the domain-name to the CF-ELB endpoint and one that maps the ssh.domain-name to the CF-SSH-ELB endpoint. In this project, we will set up a Route53 as the DNS server. You can log into the AWS Console, create a new _Hosted Zone_ for your domain. Then go back to the `terraform/aws` sub-directory of this repository and add to the `aws.tfvars` file the following configurations:
-
-```
-aws_route53_staging_enabled = "1"
-aws_route53_staging_hosted_zone_id = "XXXXXXXXXXX"
-```
-
-As usual, run `make manifest` to compile your Terraform plan and if everything worked out you, deploy the changes:
-
-```
-$ make deploy
-```
-
 (( insert_file beta_cf_domain.md ))
+
 And let's see what's left to fill out now:
 
 ```
 $ make deploy
-51 error(s) detected:
- - $.meta.azs.z1: What availability zone should the *_z1 vms be placed in?
- - $.meta.azs.z2: What availability zone should the *_z2 vms be placed in?
- - $.meta.azs.z3: What availability zone should the *_z3 vms be placed in?
- - $.meta.dns: Enter the DNS server for your VPC
- - $.meta.elbs: What elbs will be in front of the gorouters?
- - $.meta.router_security_groups: Enter the security groups which should be applied to the gorouter VMs
- - $.meta.security_groups: Enter the security groups which should be applied to CF VMs
- - $.meta.ssh_elbs: What elbs will be in front of the ssh-proxy (access_z*) nodes?
- - $.networks.cf1.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.cf1.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.cf1.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.cf1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.cf1.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.cf2.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.cf2.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.cf2.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.cf2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.cf2.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.cf3.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.cf3.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.cf3.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.cf3.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.cf3.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.router1.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.router1.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.router1.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.router1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.router1.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.router2.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.router2.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.router2.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.router2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.router2.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.runner1.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.runner1.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.runner1.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.runner1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.runner1.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.runner2.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.runner2.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.runner2.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.runner2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.runner2.subnets.0.static: Enter the static IP ranges for this subnet
- - $.networks.runner3.subnets.0.cloud_properties.subnet: Enter the AWS subnet ID for this subnet
- - $.networks.runner3.subnets.0.gateway: Enter the Gateway for this subnet
- - $.networks.runner3.subnets.0.range: Enter the CIDR address for this subnet
- - $.networks.runner3.subnets.0.reserved: Enter the reserved IP ranges for this subnet
- - $.networks.runner3.subnets.0.static: Enter the static IP ranges for this subnet
- - $.properties.cc.security_group_definitions.load_balancer.rules: Specify the rules for allowing access for CF apps to talk to the CF Load Balancer External IPs
- - $.properties.cc.security_group_definitions.services.rules: Specify the rules for allowing access to CF services subnets
- - $.properties.cc.security_group_definitions.user_bosh_deployments.rules: Specify the rules for additional BOSH user services that apps will need to talk to
 
-
-Failed to merge templates; bailing...
-Makefile:22: recipe for target 'manifest' failed
-make: *** [manifest] Error 5
+TODO:  INSERT OPENSTACK ERRORS HERE
 ```
 
-All of those parameters look like they're networking related. Time to start building out the `networking.yml` file. Since our VPC is `10.4.0.0/16`, Amazon will have provided a DNS server for us at `10.4.0.2`. We can grab the AZs and ELB names from our terraform output, and define our router + cf security groups, without consulting the Network Plan:
+All of those parameters look like they're networking related. Time to start building out the `networking.yml` file.
+
+Now, we can consult our [Network Plan][netplan] for the subnet information,  cross referencing with terraform output to get the subnet IDs:
 
 ```
 $ cat networking.yml
 ---
 meta:
   azs:
-    z1: us-west-2a
-    z2: us-west-2b
-    z3: us-west-2c
-  dns: [10.4.0.2]
-  elbs: [xxxxxx-staging-cf-elb] # <- ELB name
-  ssh_elbs: [xxxxxx-staging-cf-ssh-elb] # <- SSH ELB name
-  router_security_groups: [wide-open]
-  security_groups: [wide-open]
-```
-
-Now, we can consult our [Network Plan][netplan] for the subnet information,  cross referencing with terraform output or the AWS console to get the subnet ID:
-
-```
-$ cat networking.yml
----
-meta:
-  azs:
-    z1: us-west-2a
-    z2: us-west-2b
-    z3: us-west-2c
-  dns: [10.4.0.2]
-  elbs: [xxxxxx-staging-cf-elb] # <- ELB name
-  ssh_elbs: [xxxxxx-staging-cf-ssh-elb] # <- SSH ELB name
+    z1: (( insert_parameter site.name ))
+    z2: (( insert_parameter site.name ))
+    z3: (( insert_parameter site.name ))
+  dns: [8.8.8.8, 8.8.4.4]
   router_security_groups: [wide-open]
   security_groups: [wide-open]
 
 networks:
 - name: router1
   subnets:
-  - range: 10.4.35.0/25
-    static: [10.4.35.4 - 10.4.35.100]
-    reserved: [10.4.35.2 - 10.4.35.3] # amazon reserves these
-    gateway: 10.4.35.1
+  - range: 10.4.19.0/25
+    static: [10.4.19.4 - 10.4.19.10]
+    reserved:
+      - 10.4.19.2 - 10.4.19.3
+      - 10.4.19.120 - 10.4.19.126
+    gateway: 10.4.19.1
     cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
+      net_id: 262fb235-de6c-4979-832a-225c66859d26
 - name: router2
   subnets:
-  - range: 10.4.35.128/25
-    static: [10.4.35.132 - 10.4.35.227]
-    reserved: [10.4.35.130 - 10.4.35.131] # amazon reserves these
-    gateway: 10.4.35.129
+  - range: 10.4.19.128/25
+    static: [10.4.19.132 - 10.4.19.138]
+    reserved:
+      - 10.4.19.130 - 10.4.19.131
+      - 10.4.19.248 - 10.4.19.254
+    gateway: 10.4.19.129
     cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
+      net_id: 41fb3f7d-9198-49e2-84b9-d142628a666a
 - name: cf1
   subnets:
-  - range: 10.4.36.0/24
-    static: [10.4.36.4 - 10.4.36.100]
-    reserved: [10.4.36.2 - 10.4.36.3] # amazon reserves these
-    gateway: 10.4.36.1
+  - range: 10.4.20.0/24
+    static: [10.4.20.4 - 10.4.20.100]
+    reserved: [10.4.20.2 - 10.4.20.3]
+    gateway: 10.4.20.1
     cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
+      net_id: bbea24c9-58dc-4df5-899d-fd46e3dfbe5e
 - name: cf2
   subnets:
-  - range: 10.4.37.0/24
-    static: [10.4.37.4 - 10.4.37.100]
-    reserved: [10.4.37.2 - 10.4.37.3] # amazon reserves these
-    gateway: 10.4.37.1
+  - range: 10.4.21.0/24
+    static: [10.4.21.4 - 10.4.21.100]
+    reserved: [10.4.21.2 - 10.4.21.3]
+    gateway: 10.4.21.1
     cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
+      net_id: a2f1e561-2c02-4f7b-9dd9-4c5fd44c9783
 - name: cf3
   subnets:
-  - range: 10.4.38.0/24
-    static: [10.4.38.4 - 10.4.38.100]
-    reserved: [10.4.38.2 - 10.4.38.3] # amazon reserves these
-    gateway: 10.4.38.1
+  - range: 10.4.22.0/24
+    static: [10.4.22.4 - 10.4.22.100]
+    reserved: [10.4.22.2 - 10.4.22.3]
+    gateway: 10.4.22.1
     cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
+      net_id: 4e1df0ff-f7f9-4cf8-9c19-77afd48e7e9f
 - name: runner1
   subnets:
-  - range: 10.4.39.0/24
-    static: [10.4.39.4 - 10.4.39.100]
-    reserved: [10.4.39.2 - 10.4.39.3] # amazon reserves these
-    gateway: 10.4.39.1
+  - range: 10.4.23.0/24
+    static: [10.4.23.4 - 10.4.23.100]
+    reserved: [10.4.23.2 - 10.4.23.3]
+    gateway: 10.4.23.1
     cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
+      net_id: 7f4b6f05-685f-48c7-bc6d-edc8bd00b145
 - name: runner2
   subnets:
-  - range: 10.4.40.0/24
-    static: [10.4.40.4 - 10.4.40.100]
-    reserved: [10.4.40.2 - 10.4.40.3] # amazon reserves these
-    gateway: 10.4.40.1
+  - range: 10.4.24.0/24
+    static: [10.4.24.4 - 10.4.24.100]
+    reserved: [10.4.24.2 - 10.4.24.3]
+    gateway: 10.4.24.1
     cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
+      net_id: 631b5c2d-7948-4e77-8ca7-36417514e835
 - name: runner3
   subnets:
-  - range: 10.4.41.0/24
-    static: [10.4.41.4 - 10.4.41.100]
-    reserved: [10.4.41.2 - 10.4.41.3] # amazon reserves these
-    gateway: 10.4.41.1
+  - range: 10.4.25.0/24
+    static: [10.4.25.4 - 10.4.25.100]
+    reserved: [10.4.25.2 - 10.4.25.3]
+    gateway: 10.4.25.1
     cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
-```
+      net_id: ecbf813d-77af-4919-9c80-279d9eaf10c6
 
-Let's see what's left now:
-
-```
-$ make deploy
-3 error(s) detected:
- - $.properties.cc.security_group_definitions.load_balancer.rules: Specify the rules for allowing access for CF apps to talk to the CF Load Balancer External IPs
- - $.properties.cc.security_group_definitions.services.rules: Specify the rules for allowing access to CF services subnets
- - $.properties.cc.security_group_definitions.user_bosh_deployments.rules: Specify the rules for additional BOSH user services that apps will need to talk to
-```
-
-The only bits left are the Cloud Foundry security group definitions (applied to each running app, not the SGs applied to the CF VMs). We add three sets of rules for apps to have access to by default - `load_balancer`, `services`, and `user_bosh_deployments`. The `load_balancer` group should have a rule allowing access to the public IP(s) of the Cloud Foundry installation, so that apps are able to talk to other apps. The `services` group should have rules allowing access to the internal IPs of the services networks (according to our [Network Plan][netplan], `10.4.42.0/24`, `10.4.43.0/24`, `10.4.44.0/24`). The `user_bosh_deployments` is used for any non-CF-services that the apps may need to talk to. In our case, there aren't any, so this can be an empty list.
-
-```
-$ cat networking.yml
----
-meta:
-  azs:
-    z1: us-west-2a
-    z2: us-west-2b
-    z3: us-west-2c
-  dns: [10.4.0.2]
-  elbs: [xxxxxx-staging-cf-elb] # <- ELB name
-  ssh_elbs: [xxxxxx-staging-cf-ssh-elb] # <- SSH ELB name
-  router_security_groups: [wide-open]
-  security_groups: [wide-open]
-
-networks:
-- name: router1
-  subnets:
-  - range: 10.4.35.0/25
-    static: [10.4.35.4 - 10.4.35.100]
-    reserved: [10.4.35.2 - 10.4.35.3] # amazon reserves these
-    gateway: 10.4.35.1
-    cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
-- name: router2
-  subnets:
-  - range: 10.4.35.128/25
-    static: [10.4.35.132 - 10.4.35.227]
-    reserved: [10.4.35.130 - 10.4.35.131] # amazon reserves these
-    gateway: 10.4.35.129
-    cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
-- name: cf1
-  subnets:
-  - range: 10.4.36.0/24
-    static: [10.4.36.4 - 10.4.36.100]
-    reserved: [10.4.36.2 - 10.4.36.3] # amazon reserves these
-    gateway: 10.4.36.1
-    cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
-- name: cf2
-  subnets:
-  - range: 10.4.37.0/24
-    static: [10.4.37.4 - 10.4.37.100]
-    reserved: [10.4.37.2 - 10.4.37.3] # amazon reserves these
-    gateway: 10.4.37.1
-    cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
-- name: cf3
-  subnets:
-  - range: 10.4.38.0/24
-    static: [10.4.38.4 - 10.4.38.100]
-    reserved: [10.4.38.2 - 10.4.38.3] # amazon reserves these
-    gateway: 10.4.38.1
-    cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
-- name: runner1
-  subnets:
-  - range: 10.4.39.0/24
-    static: [10.4.39.4 - 10.4.39.100]
-    reserved: [10.4.39.2 - 10.4.39.3] # amazon reserves these
-    gateway: 10.4.39.1
-    cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
-- name: runner2
-  subnets:
-  - range: 10.4.40.0/24
-    static: [10.4.40.4 - 10.4.40.100]
-    reserved: [10.4.40.2 - 10.4.40.3] # amazon reserves these
-    gateway: 10.4.40.1
-    cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
-- name: runner3
-  subnets:
-  - range: 10.4.41.0/24
-    static: [10.4.41.4 - 10.4.41.100]
-    reserved: [10.4.41.2 - 10.4.41.3] # amazon reserves these
-    gateway: 10.4.41.1
-    cloud_properties:
-      subnet: subnet-XXXXXX # <--- your subnet ID here
+- name: floating
+  type: vip
+  cloud_properties:
+    net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5
+    security_groups: [wide-open]
+jobs:
+- name: api_z1
+  networks:
+  - name: cf1
+    default: [dns, gateway]
+  - name: floating
+    static_ips:
+    - 172.26.75.125
+- name: api_z2
+  networks:
+  - name: cf2
+    default: [dns, gateway]
 
 properties:
   cc:
@@ -1434,20 +1187,11 @@ properties:
       rules: []
     - name: services
       rules:
-      - destination: 10.4.42.0-10.4.44.255
+      - destination: 10.4.26.0-10.4.28.255
         protocol: all
     - name: user_bosh_deployments
       rules: []
 ```
-(( insert_file beta_cf_scaling.md ))
 (( insert_file beta_cf_deploy.md ))
-You may encounter the following error when you are deploying Beta CF.
-
-```
-Unknown CPI error 'Unknown' with message 'Your quota allows for 0 more running instance(s). You requested at least 1.
-```
-
-Amazon has per-region limits for different types of resources. Check what resource type your failed job is using and request to increase limits for the resource your jobs are failing at. You can log into your Amazon console, go to EC2 services, on the left column click `Limits`, you can click the blue button says `Request limit increase` on the right of each type of resource. It takes less than 30 minutes get limits increase approved through Amazon.
-
 (( insert_file beta_cf_push_app.md ))
 (( insert_file next_steps.md ))

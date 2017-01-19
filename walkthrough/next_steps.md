@@ -8,11 +8,6 @@ Lather, rinse, repeat for all additional environments (dev, prod, loadtest, what
 
 [//]: # (Links, please keep in alphabetical order)
 
-[amazon-region-doc]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
-[aws]:               https://signin.aws.amazon.com/console
-[aws-subnets]:       http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
-[az]:                http://aws.amazon.com/about-aws/global-infrastructure/
-[bastion_host]:      aws.md#bastion-host
 [bolo]:              https://github.com/cloudfoundry-community/bolo-boshrelease
 [cfconsul]:          https://docs.cloudfoundry.org/concepts/architecture/#bbs-consul
 [cfetcd]:            https://docs.cloudfoundry.org/concepts/architecture/#etcd
@@ -22,11 +17,9 @@ Lather, rinse, repeat for all additional environments (dev, prod, loadtest, what
 [netplan]:           https://github.com/starkandwayne/codex/blob/master/network.md
 [ngrok-download]:    https://ngrok.com/download
 [infra-ips]:         https://github.com/starkandwayne/codex/blob/master/part3/network.md#global-infrastructure-ip-allocation
-[setup_credentials]: aws.md#setup-credentials
 [spruce-129]:        https://github.com/geofffranks/spruce/issues/129
 [slither]:           http://slither.io
 [troubleshooting]:   troubleshooting.md
-[use_terraform]:     aws.md#use-terraform
 [verify_ssh]:        https://github.com/starkandwayne/codex/blob/master/troubleshooting.md#verify-keypair
 [cf-env]:            https://github.com/cloudfoundry-community/cf-env
 [orgs and spaces]:   https://docs.cloudfoundry.org/concepts/roles.html

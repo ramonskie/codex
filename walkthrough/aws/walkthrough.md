@@ -1493,3 +1493,9 @@ Amazon has per-region limits for different types of resources. Check what resour
 
 (( insert_file beta_cf_push_app.md ))
 (( insert_file next_steps.md ))
+
+AWS-Specific Links:
+[amazon-region-doc]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
+[aws]:               https://signin.aws.amazon.com/console
+[aws-subnets]:       http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
+[az]:                http://aws.amazon.com/about-aws/global-infrastructure/

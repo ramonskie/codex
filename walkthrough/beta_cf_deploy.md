@@ -23,7 +23,7 @@ Deployed '(( insert_parameter site.name ))-staging-cf' to '(( insert_parameter s
 
 ```
 
-If you want to scale your deployment in the current environment (here it is staging), you can modify `scaling.yml` in your `cf-deployments/(( insert_parameter site.name ))/staging` directory. In the following example, you scale runners in both AZ to 2. Afterwards you can run `make manifest` and `make deploy`, please always remember to verify your changes in the manifest before you type `yes` to deploy making sure the changes are what you want.
+If you want to scale your deployment in the current environment (here it is staging), you can modify `scaling.yml` in your `cf-deployments/(( insert_parameter site.name ))/staging` directory. In the following example, you scale runners in both AZ to 2. Afterwards you can run `make manifest` and `make deploy`, but always remember to verify your changes in the manifest before you type `yes`.
 
 ```
 jobs:

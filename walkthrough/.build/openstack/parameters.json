@@ -24,5 +24,9 @@
 		"external_concourse_url": "https://ci.172.26.75.117.sslip.io",
 		"concourse_fip": "172.26.75.115",
 		"boshlite_fip": "172.26.75.124"
+	},
+	"cf_beta": {
+		"base_domain": "172.26.75.154.sslip.io",
+		"directory_key_prefix": "172.26.75.154.sslip.io"
 	}
 }

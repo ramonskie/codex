@@ -228,7 +228,7 @@ Full name: Joe User
 Username:  juser
 Enter the public key for this user's .ssh/authorized_keys file:
 You should run `jumpbox user` now, as juser:
-  su - juser  
+  su - juser
   jumpbox user
 ```
 
@@ -1259,8 +1259,6 @@ You're also going to want to provision a dedicated bucket to
 store archives in, and name it something descriptive, like
 `codex-backups`.
 
-QUINN:  Please review and add / change as needed.
-
 ### Deploying SHIELD
 
 We'll start out with the Genesis template for SHIELD:
@@ -1332,7 +1330,6 @@ networks:
     cloud_properties:
       net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5     # ID for public
       security_groups: [wide-open]
-
 jobs:
 - name: shield
   networks:
@@ -1770,7 +1767,7 @@ meta:
   shield_authorized_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
 ```
 
-QUINN:  The following statement is in the AWS instructions too.  Shouldn't this be the IP of CF instead of the bastion host?
+TODO:  The following statement is in the AWS instructions too.  Shouldn't this be the IP of CF instead of the bastion host?
 
 Be sure to replace the x.x.x.x in the external_url above with the Floating IP address of the bastion host.
 
@@ -1865,6 +1862,7 @@ of the bastion host.
 
 TODO: Need an example to show how to setup pipeline for deployments using Concourse.
 
+(( insert file concourse_pipelines_setup.md ))
 ## Building out Sites and Environments
 
 Now that the underlying infrastructure has been deployed, we can start deploying our alpha/beta/other sites, with Cloud Foundry, and any required services. When using Concourse to update BOSH deployments,
@@ -2056,7 +2054,6 @@ networks:
   cloud_properties:
     net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5
     security_groups: [wide-open]
-
 jobs:
 - name: bosh
   networks:
@@ -2400,14 +2397,13 @@ Notice, unlike the **proto-BOSH** setup, we do not specify `--type bosh-init`. T
 Let's try to deploy now, and see what information still needs to be resolved:
 
 ```
-Insert OpenStack Template Key Errors Here
+TODO: Insert Openstack Template key Errors Here
 ```
 
 Looks like we need to provide the same type of data as we did for **proto-BOSH**. Lets fill in the basic properties:
 
 ```
 $ cat > properties.yml <<EOF
----
 ---
 meta:
   openstack:
@@ -2416,7 +2412,6 @@ meta:
     username: (( vault meta.vault_prefix "/openstack:username" ))
     auth_url: http://identity.openvdc.lab:5000/v2.0
     region: openvdc-dc01
-
 cloud_provider:
   properties:
     openstack:
@@ -2427,7 +2422,6 @@ cloud_provider:
   ssh_tunnel:
     host: (( grab jobs.bosh.networks.default.static_ips.0 ))
     private_key: ~/.ssh/bosh
-
 properties:
   bolo:
     submission:
@@ -2477,7 +2471,7 @@ networks:
     cloud_properties:
       net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5
       security_groups: [wide-open]
-
+ 
 jobs:
   - name: bosh
     networks:
@@ -2647,14 +2641,13 @@ $ make manifest
 ```
 
 ```
-INSERT OPENSTACK ERRORS HERE
+TODO:  INSERT OPENSTACK ERRORS HERE
 ```
 
 Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those (no need to create the blobstore S3 buckets yourself):
 
 ```
 $ cat properties.yml
----
 ---
 meta:
   type: cf
@@ -2663,8 +2656,8 @@ meta:
   skip_ssl_validation: true
 
   cf:
-    base_domain: 10.4.19.9.sslip.io
-    directory_key_prefix: 10-4-19-4-sslip-io
+    base_domain: 172.26.75.154.sslip.io
+    directory_key_prefix: 172.26.75.154.sslip.io
     blobstore_config:
       fog_connection:
         aws_access_key_id: (( vault "secret/s3:access_key" ))
@@ -2679,7 +2672,6 @@ meta:
         aws_signature_version: 2
         provider: "AWS"
         #region: dc01
-
 properties:
   bolo:
     submission:
@@ -2692,54 +2684,112 @@ properties:
   loggregator_endpoint:
     host: 10.4.20.105 # TODO: consul/dns/LB ???
     port: 3456
-
-#######
-jobs:
-- name: uaa_z1
-  instances: 1
-- name: uaa_z2
-  instances: 0
-- name: api_z1
-  instances: 1
-- name: api_z2
-  instances: 0
-- name: stats
-  instances: 1
-- name: doppler_z1
-  instances: 1
-- name: doppler_z2
-  instances: 0
-- name: loggregator_trafficcontroller_z1
-  instances: 1
-- name: loggregator_trafficcontroller_z2
-  instances: 0
-- name: router_z1
-  instances: 1
-- name: router_z2
-  instances: 0
-- name: brain_z1
-  instances: 1
-- name: brain_z2
-  instances: 0
-- name: cell_z1
-  instances: 1
-- name: cell_z2
-  instances: 0
-- name: cc_bridge_z1
-  instances: 1
-- name: cc_bridge_z2
-  instances: 0
-- name: route_emitter_z1
-  instances: 1
-- name: route_emitter_z2
-  instances: 0
-- name: access_z1
-  instances: 1
-- name: access_z2
-  instances: 0
 ```
 
-Let's make sure to add our Cloud Foundry domain to properties.yml:
+Also, let's fill out `scaling.yml` so we can more easily scale out our Availability Zones and jobs:
+
+```
+meta:
+  azs:
+    z1: dc01
+    z2: dc01
+    z3: dc01
+jobs:
+ - name: uaa_z1
+   instances: 1
+ - name: uaa_z2
+   instances: 0
+ - name: api_z1
+   instances: 1
+ - name: api_z2
+   instances: 0
+ - name: stats
+   instances: 1
+ - name: doppler_z1
+   instances: 1
+ - name: doppler_z2
+   instances: 0
+ - name: loggregator_trafficcontroller_z1
+   instances: 1
+ - name: loggregator_trafficcontroller_z2
+   instances: 0
+ - name: router_z1
+   instances: 1
+ - name: router_z2
+   instances: 0
+ - name: brain_z1
+   instances: 1
+ - name: brain_z2
+   instances: 0
+ - name: cell_z1
+   instances: 1
+ - name: cell_z2
+   instances: 0
+ - name: cc_bridge_z1
+   instances: 1
+ - name: cc_bridge_z2
+   instances: 0
+ - name: route_emitter_z1
+   instances: 1
+ - name: route_emitter_z2
+   instances: 0
+ - name: access_z1
+   instances: 1
+ - name: access_z2
+   instances: 0``
+```
+
+In addition, let us generate our self-signed certificates for CF:
+Now it's time to create our Elastic Load Balancer that will be in front of the `gorouters`, but as we will need TLS termination we then need to create a SSL/TLS certificate for our domain.
+
+Create first the CA Certificate:
+
+```
+$ mkdir -p /tmp/certs
+$ cd /tmp/certs
+$ certstrap init --common-name "CertAuth"
+Enter passphrase (empty for no passphrase):
+
+Enter same passphrase again:
+
+Created out/CertAuth.key
+Created out/CertAuth.crt
+Created out/CertAuth.crl
+```
+
+Then create the certificates for your domain:
+
+```
+$ certstrap request-cert -common-name *.staging.<your domain> -domain *.system.staging.<your domain>,*.run.staging.<your domain>,*.login.staging.<your domain>,*.uaa.staging.<your domain>
+
+Enter passphrase (empty for no passphrase):
+
+Enter same passphrase again:
+
+Created out/*.staging.<your domain>.key
+Created out/*.staging.<your domain>.csr
+```
+
+And last, sign the domain certificates with the CA certificate:
+
+```
+$ certstrap sign *.staging.<your domain> --CA CertAuth
+Created out/*.staging.<your domain>.crt from out/*.staging.<your domain>.csr signed by out/CertAuth.key
+```
+
+For safety, let's store the certificates in Vault:
+
+```
+$ cd out
+$ safe write secret/dc01/staging/cf/tls/ca "csr@CertAuth.crl"
+$ safe write secret/dc01/staging/cf/tls/ca "crt@CertAuth.crt"
+$ safe write secret/dc01/staging/cf/tls/ca "key@CertAuth.key"
+$ safe write secret/dc01/staging/cf/tls/domain "crt@*.staging.<your domain>.crt"
+$ safe write secret/dc01/staging/cf/tls/domain "csr@*.staging.<your domain>.csr"
+$ safe write secret/dc01/staging/cf/tls/domain "key@*.staging.<your domain>.key"
+```
+
+Lastly, let's make sure to add our Cloud Foundry domain to properties.yml:
 
 ```
 ---
@@ -2750,16 +2800,13 @@ meta:
     ...
 ```
 
+
 And let's see what's left to fill out now:
 
 ```
 $ make deploy
 
-INSERT OPENSTACK ERRORS HERE
-
-Failed to merge templates; bailing...
-Makefile:22: recipe for target 'manifest' failed
-make: *** [manifest] Error 5
+TODO:  INSERT OPENSTACK ERRORS HERE
 ```
 
 All of those parameters look like they're networking related. Time to start building out the `networking.yml` file.
@@ -2768,8 +2815,6 @@ Now, we can consult our [Network Plan][netplan] for the subnet information,  cro
 
 ```
 $ cat networking.yml
----
-
 ---
 meta:
   azs:
@@ -2785,7 +2830,7 @@ networks:
   subnets:
   - range: 10.4.19.0/25
     static: [10.4.19.4 - 10.4.19.10]
-    reserved: 
+    reserved:
       - 10.4.19.2 - 10.4.19.3
       - 10.4.19.120 - 10.4.19.126
     gateway: 10.4.19.1
@@ -2795,18 +2840,17 @@ networks:
   subnets:
   - range: 10.4.19.128/25
     static: [10.4.19.132 - 10.4.19.138]
-    reserved: 
+    reserved:
       - 10.4.19.130 - 10.4.19.131
       - 10.4.19.248 - 10.4.19.254
     gateway: 10.4.19.129
     cloud_properties:
       net_id: 41fb3f7d-9198-49e2-84b9-d142628a666a
-
 - name: cf1
   subnets:
   - range: 10.4.20.0/24
     static: [10.4.20.4 - 10.4.20.100]
-    reserved: [10.4.20.2 - 10.4.20.3] 
+    reserved: [10.4.20.2 - 10.4.20.3]
     gateway: 10.4.20.1
     cloud_properties:
       net_id: bbea24c9-58dc-4df5-899d-fd46e3dfbe5e
@@ -2814,15 +2858,15 @@ networks:
   subnets:
   - range: 10.4.21.0/24
     static: [10.4.21.4 - 10.4.21.100]
-    reserved: [10.4.21.2 - 10.4.21.3] 
+    reserved: [10.4.21.2 - 10.4.21.3]
     gateway: 10.4.21.1
     cloud_properties:
-      net_id: a2f1e561-2c02-4f7b-9dd9-4c5fd44c9783 
+      net_id: a2f1e561-2c02-4f7b-9dd9-4c5fd44c9783
 - name: cf3
   subnets:
   - range: 10.4.22.0/24
     static: [10.4.22.4 - 10.4.22.100]
-    reserved: [10.4.22.2 - 10.4.22.3] 
+    reserved: [10.4.22.2 - 10.4.22.3]
     gateway: 10.4.22.1
     cloud_properties:
       net_id: 4e1df0ff-f7f9-4cf8-9c19-77afd48e7e9f
@@ -2830,7 +2874,7 @@ networks:
   subnets:
   - range: 10.4.23.0/24
     static: [10.4.23.4 - 10.4.23.100]
-    reserved: [10.4.23.2 - 10.4.23.3] 
+    reserved: [10.4.23.2 - 10.4.23.3]
     gateway: 10.4.23.1
     cloud_properties:
       net_id: 7f4b6f05-685f-48c7-bc6d-edc8bd00b145
@@ -2838,16 +2882,15 @@ networks:
   subnets:
   - range: 10.4.24.0/24
     static: [10.4.24.4 - 10.4.24.100]
-    reserved: [10.4.24.2 - 10.4.24.3] 
+    reserved: [10.4.24.2 - 10.4.24.3]
     gateway: 10.4.24.1
     cloud_properties:
       net_id: 631b5c2d-7948-4e77-8ca7-36417514e835
-
 - name: runner3
   subnets:
   - range: 10.4.25.0/24
     static: [10.4.25.4 - 10.4.25.100]
-    reserved: [10.4.25.2 - 10.4.25.3]  
+    reserved: [10.4.25.2 - 10.4.25.3]
     gateway: 10.4.25.1
     cloud_properties:
       net_id: ecbf813d-77af-4919-9c80-279d9eaf10c6
@@ -2869,9 +2912,6 @@ jobs:
   networks:
   - name: cf2
     default: [dns, gateway]
-  #- name: floating
-  #  static_ips:
-  #  - 172.26.75.126
 
 properties:
   cc:
@@ -2884,10 +2924,8 @@ properties:
         protocol: all
     - name: user_bosh_deployments
       rules: []
-
 ```
-
-Aaaaand let's deploy.
+That should be it, finally. Let's deploy!
 
 ```
 $ make deploy
