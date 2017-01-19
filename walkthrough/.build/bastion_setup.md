@@ -28,7 +28,7 @@ Let's add a user with `jumpbox useradd`:
 
 ```
 $ jumpbox useradd
-Full name: Joe User
+Full name: J User
 Username:  juser
 Enter the public key for this user's .ssh/authorized_keys file:
 You should run `jumpbox user` now, as juser:
@@ -52,7 +52,7 @@ $ jumpbox user
 The following warning may show up when you run `jumpbox user`:
 ```
  * WARNING: You have '~/.profile' file, you might want to load it,
-    to do that add the following line to '/home/XJ/.bash_profile':
+    to do that add the following line to '/home/juser/.bash_profile':
 
       source ~/.profile
 ```
@@ -106,6 +106,6 @@ safe installed - safe v0.0.23
 vault installed - Vault v0.6.0
 genesis installed - genesis 1.5.2 (61864a21370c)
 
-git user.name  is 'Joe User'
+git user.name  is 'J User'
 git user.email is 'juser@starkandwayne.com'
 ```

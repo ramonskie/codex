@@ -1,8 +1,8 @@
-# Openstack Codex Walkthrough
+# OpenStack Codex Walkthrough
 
 ## Overview
 
-Welcome to the Stark & Wayne guide to deploying Cloud Foundry on Openstack.
+Welcome to the Stark & Wayne guide to deploying Cloud Foundry on OpenStack.
   This guide provides the steps to create authentication credentials,
 generate the underlying cloud infrastructure, then use Terraform to prepare a bastion
 host.
@@ -36,7 +36,7 @@ Now it's time to setup the credentials.
 ## Setup Credentials
 
 To start deploying the infrastructure, the first thing you need to do is create
-an Openstack user and give it admin access to a new tenant.
+an OpenStack user and give it admin access to a new tenant.
 
 1. Log into Horizon as the **admin** user.
 2. Under **Identity --> Projects**, create a new project and set the quotas to
@@ -61,10 +61,10 @@ an Openstack user and give it admin access to a new tenant.
 3. Under **Identity --> Users**, create a new user.  Give the user **admin** access
    to the new project.
 
-### Generate Openstack Key Pair
+### Generate OpenStack Key Pair
 
 The **User Name**, **Password**, and **Tenant Name** (same as **Project Name**) are
-used to get access to the Openstack Services by BOSH.  Next, we'll need to create a
+used to get access to the OpenStack Services by BOSH.  Next, we'll need to create a
 **Key Pair**.  This will be used as we bring up the initial bastion host instances,
 and is the SSH key you'll use to connect from your local machine to the bastion.
 
@@ -81,7 +81,7 @@ work.
    **Create Key Pair** functionality.  In Liberty and later, you MUST separately
    create an RSA keypair using `ssh-keygen` and import the public key using the
    **Import Key Pair** function.  This is a known problem between BOSH and versions
-   of Openstack starting with Mitaka onward.
+   of OpenStack starting with Mitaka onward.
 
    Also, ensure that the private key (whether a downloaded \*.pem file or separately
    generated) has permissions of `0600`.
@@ -109,7 +109,7 @@ Make note of the public network's UUID.  It will be needed in the next step.
 
 ## Use Terraform
 
-Once the requirements for Openstack are met, we can put it all together and build out
+Once the requirements for OpenStack are met, we can put it all together and build out
 your shiny new networks, routers, security groups and bastion host. Change
 to the `terraform/openstack` sub-directory of this repository before we begin.
 
@@ -172,7 +172,7 @@ Now, to pull the trigger, run `make deploy`:
 $ make deploy
 ```
 
-Terraform will connect to Openstack, using your **User Name**, **Password**, and
+Terraform will connect to OpenStack, using your **User Name**, **Password**, and
 **Tenant Name**, and spin up all the things it needs.  When it finishes, you should
 be left with a bunch of subnets, security groups, and a bastion host.
 
@@ -224,7 +224,7 @@ Let's add a user with `jumpbox useradd`:
 
 ```
 $ jumpbox useradd
-Full name: Joe User
+Full name: J User
 Username:  juser
 Enter the public key for this user's .ssh/authorized_keys file:
 You should run `jumpbox user` now, as juser:
@@ -248,7 +248,7 @@ $ jumpbox user
 The following warning may show up when you run `jumpbox user`:
 ```
  * WARNING: You have '~/.profile' file, you might want to load it,
-    to do that add the following line to '/home/XJ/.bash_profile':
+    to do that add the following line to '/home/juser/.bash_profile':
 
       source ~/.profile
 ```
@@ -302,7 +302,7 @@ safe installed - safe v0.0.23
 vault installed - Vault v0.6.0
 genesis installed - genesis 1.5.2 (61864a21370c)
 
-git user.name  is 'Joe User'
+git user.name  is 'J User'
 git user.email is 'juser@starkandwayne.com'
 ```
 
@@ -319,7 +319,7 @@ There are three layers to `genesis` templates.
 ### Site Name
 
 Sometimes the site level name can be a bit tricky because each IaaS divides things
-differently.  With Openstack we suggest a default of the Openstack Datacenter you're using, for
+differently.  With OpenStack we suggest a default of the OpenStack Datacenter you're using, for
 example: `dc01`.
 
 ### Environment Name
@@ -468,7 +468,7 @@ genesis new site --template <name> <site_name>
 ```
 
 The template `<name>` will be `openstack` because that's our IaaS we're working with and
-we recommend the `<site_name>` default to the Openstack Datacenter, ex. `dc01`.
+we recommend the `<site_name>` default to the OpenStack Datacenter, ex. `dc01`.
 
 ```
 $ genesis new site --template openstack dc01
@@ -589,7 +589,7 @@ meta:
     region: openvdc-dc01
 ```
 
-Configure the Openstack credentials by pointing
+Configure the OpenStack credentials by pointing
 Genesis to the Vault.  Let's go put those credentials in the
 Vault:
 
@@ -601,7 +601,7 @@ $ safe set ${VAULT_PREFIX}/openstack tenant=cf username=cfadmin api_key=putyourp
 Let's try that `make manifest` again.
 
 ```
-$ make manifest`
+$ make manifest
 5 error(s) detected:
 - $.cloud_provider.properties.openstack.default_key_name: What is your full key name?
 - $.cloud_provider.properties.openstack.default_security_groups: What Security Groups?
@@ -615,7 +615,7 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Better. Let's configure our `cloud_provider` for Openstack, using our OpenStack key pair.
+Better. Let's configure our `cloud_provider` for OpenStack, using our OpenStack key pair.
 We need copy our private key to the bastion host and path to the key for the
 `private_key` entry in the following `properties.yml`.
 
@@ -767,9 +767,9 @@ Our range is that of the actual subnet we are in, `10.4.1.0/24`
 (in reality, the `/28` allocation is merely a tool of bookkeeping).  As such, our
 neutron-provided default gateway is 10.4.1.1 (the first available
 IP from the associated router).  DNS needs to be the IP's provided by your
-Openstack administrator.
+OpenStack administrator.
 
-We identify our Openstack-specific configuration under
+We identify our OpenStack-specific configuration under
 `cloud_properties`, by calling out the **Network UUID** - NOT the subnet UUID, of
 the internal neutron network we wish to use.  We also define the security groups
 BOSH will be bound to.
@@ -930,7 +930,7 @@ networks:
   - **10.4.2.16/28** in zone 2 (b)
   - **10.4.3.16/28** in zone 3 (c)
 
-First, lets do our Openstack-specific region/zone configuration, along with our Vault HA fully-qualified domain name:
+First, lets do our OpenStack-specific region/zone configuration, along with our Vault HA fully-qualified domain name:
 
 ```
 $ cat properties.yml
@@ -1003,7 +1003,7 @@ networks:
 That's a ton of configuration, but when you break it down it's not
 all that bad.  We're defining three separate networks (one for
 each of the three availability zones).  Each network has a unique
-Openstack Network UUID, but they share the same Security Groups, since
+OpenStack Network UUID, but they share the same Security Groups, since
 we want uniform access control across the board.
 
 The most difficult part of this configuration is getting the
@@ -1340,7 +1340,7 @@ jobs:
     - 172.26.75.121
 ```
 
-(Don't forget to change your `subnet` to match your Openstack Network UUID and
+(Don't forget to change your `subnet` to match your OpenStack Network UUID and
 associated security group.)
 
 Also, in this case (as will be seen later with things like Bolo and Cloud Foundry),
@@ -1509,7 +1509,7 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-From the error message, we need to configure the following things for an Openstack deployment of
+From the error message, we need to configure the following things for an OpenStack deployment of
 bolo:
 
 - Availability Zone (via `meta.az`)
@@ -1872,7 +1872,7 @@ there are the concepts of `alpha` and `beta` sites. The alpha site is the initia
 
 #### BOSH-Lite
 
-Since our `alpha` site will be a bosh lite running on Openstack, we will need to deploy that to our [global infrastructure network][netplan].
+Since our `alpha` site will be a bosh lite running on OpenStack, we will need to deploy that to our [global infrastructure network][netplan].
 
 First, lets make sure we're in the right place, targeting the right Vault:
 
@@ -2338,7 +2338,7 @@ We now have our alpha-environment's Cloud Foundry stood up!
 
 ### First Beta Environment
 
-Now that our `alpha` environment has been deployed, we can deploy our first beta environment to Openstack. To do this, we will first deploy a BOSH Director for the environment using the `bosh-deployments` repo we generated back when we built our [proto-BOSH](#proto-bosh), and then deploy Cloud Foundry on top of it.
+Now that our `alpha` environment has been deployed, we can deploy our first beta environment to OpenStack. To do this, we will first deploy a BOSH Director for the environment using the `bosh-deployments` repo we generated back when we built our [proto-BOSH](#proto-bosh), and then deploy Cloud Foundry on top of it.
 
 #### BOSH
 ```
@@ -2397,7 +2397,7 @@ Notice, unlike the **proto-BOSH** setup, we do not specify `--type bosh-init`. T
 Let's try to deploy now, and see what information still needs to be resolved:
 
 ```
-TODO: Insert Openstack Template key Errors Here
+TODO: Insert OpenStack Template key Errors Here
 ```
 
 Looks like we need to provide the same type of data as we did for **proto-BOSH**. Lets fill in the basic properties:

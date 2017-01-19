@@ -1,13 +1,13 @@
 {
 	"service": {
-		"short_name": "Openstack",
-		"long_name": "Openstack"
+		"short_name": "OpenStack",
+		"long_name": "OpenStack"
 	},
 	"template_name": "openstack",
 	"cpi_name": "openstack",
 	"site": {
 		"name": "dc01",
-		"description": "Openstack Datacenter"
+		"description": "OpenStack Datacenter"
 	},
 	"stemcell": {
 		"name": "bosh-aws-xen-hvm-ubuntu-trusty-go_agent",
