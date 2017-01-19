@@ -2695,16 +2695,26 @@ meta:
     z2: dc01
     z3: dc01
 jobs:
- - name: uaa_z1
+ - name: access_z1
    instances: 1
- - name: uaa_z2
+ - name: access_z2
    instances: 0
  - name: api_z1
    instances: 1
  - name: api_z2
    instances: 0
- - name: stats
+ - name: brain_z1
    instances: 1
+ - name: brain_z2
+   instances: 0
+ - name: cc_bridge_z1
+   instances: 1
+ - name: cc_bridge_z2
+   instances: 0
+ - name: cell_z1
+   instances: 1
+ - name: cell_z2
+   instances: 0
  - name: doppler_z1
    instances: 1
  - name: doppler_z2
@@ -2713,30 +2723,20 @@ jobs:
    instances: 1
  - name: loggregator_trafficcontroller_z2
    instances: 0
- - name: router_z1
-   instances: 1
- - name: router_z2
-   instances: 0
- - name: brain_z1
-   instances: 1
- - name: brain_z2
-   instances: 0
- - name: cell_z1
-   instances: 1
- - name: cell_z2
-   instances: 0
- - name: cc_bridge_z1
-   instances: 1
- - name: cc_bridge_z2
-   instances: 0
  - name: route_emitter_z1
    instances: 1
  - name: route_emitter_z2
    instances: 0
- - name: access_z1
+ - name: router_z1
    instances: 1
- - name: access_z2
-   instances: 0``
+ - name: router_z2
+   instances: 0
+ - name: stats
+   instances: 1
+ - name: uaa_z1
+   instances: 1
+ - name: uaa_z2
+   instances: 0
 ```
 
 In addition, let us generate our self-signed certificates for CF:
