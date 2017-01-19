@@ -114,8 +114,9 @@ Make note of the public network's UUID.  It will be needed in the next step.
 ## Use Terraform
 
 Once the requirements for OpenStack are met, we can put it all together and build out
-your shiny new networks, routers, security groups and bastion host. Change
-to the `terraform/openstack` sub-directory of this repository before we begin.
+your shiny new networks, routers, security groups and bastion host. Before we begin,
+copy the contents of `CODEX_ROOT/terraform/openstack` to your own Github repository
+and then change to that directory.
 
 The configuration directly matches the [Network Plan][netplan] for the demo
 environment.  When deploying in other environments like production, some tweaks
@@ -144,6 +145,9 @@ by adding:
 region     = "RegionTwo"
 network    = "10.42"
 ```
+
+To see what variables can be overridden in `openstack.tfvars`, and their default
+values, please look at the top of `openstack.tf`.
 
 You may change some default settings according to the real cases you are
 working on. For example, you can change `flavor_id` (default is `3`, which is
@@ -176,12 +180,17 @@ Now, to pull the trigger, run `make deploy`:
 $ make deploy
 ```
 
-Terraform will connect to OpenStack, using your **User Name**, **Password**, and
-**Tenant Name**, and spin up all the things it needs.  When it finishes, you should
-be left with a bunch of subnets, security groups, and a bastion host.
+Terraform will connect to OpenStack using the credentials you provided in the \*.tfvars
+file and spin up all the things it needs.  When it finishes, you should be left
+with a bunch of subnets, security groups, and a bastion host.
 
-If you run into issues before this point refer to our [troubleshooting][troubleshooting_openstack]
-doc for help.
+**NOTE:** Circling back around, once you have deployed your Terraform configuration
+you will need to push it to your Github repository. When you ran `make manifest`
+Terraform created a \*.tfplan file which is based on not only the current \*.tf
+and \*.tfvars files but also on the \*.tfstate file from the last run. If there is
+no \*.tfstate file then Terraform will assume you are starting a new configuration.
+When making changes in the future, you'll want to make sure to push them after the
+`make deploy` to ensure that the \*.tfstate file you have in Github is current and correct.
 
 ### Connect to Bastion
 
@@ -200,27 +209,34 @@ $ ssh -i ~/.ssh/bosh ubuntu@172.26.75.117
 
 ### Add User
 
-Once on the bastion host, you'll want to use the `jumpbox` script, which has
-been installed automatically by the Terraform configuration. [This script installs][jumpbox]
-some useful utilities like `jq`, `spruce`, `safe`, and `genesis` all of which
-will be important when we start using the bastion host to do deployments.
+Once on the bastion host, you'll need to install the `jumpbox` script:
 
-**NOTE**: Try not to confuse the `jumpbox` script with the jumpbox _BOSH release_.
-The _BOSH release_ can be used as part of a deployment.  And the script gets
-run directly on the bastion host.
+```
+sudo curl -o /usr/local/bin/jumpbox \
+  https://raw.githubusercontent.com/starkandwayne/jumpbox/master/bin/jumpbox
+sudo chmod 0755 /usr/local/bin/jumpbox
+```
 
-Once connected to the bastion, check if the `jumpbox` utility is installed.
+To check if `jumpbox` was installed correctly, try checking the version:
 
 ```
 $ jumpbox -v
-jumpbox v49
+jumpbox v50
 ```
 
-In order to have the dependencies for the `bosh_cli` we need to create a user.
-Also a convenience method at the end will prompt for git configuration that will
-be useful when we are generating Genesis templates later.
+[This script installs][jumpbox] some useful utilities such as `jq`, `spruce`, `safe`,
+and `genesis` - all of which will be important when we start using the bastion host
+to do deployments.
 
-Also, using named accounts provides auditing (via the `sudo` logs), and
+**NOTE**: Try not to confuse the `jumpbox` script with the jumpbox _BOSH release_.
+The _BOSH release_ can be used as part of a deployment whereas the script is
+run directly on the bastion host.
+
+In order to have the dependencies for the `bosh_cli` we need to create a user.
+As part of creating a user you will be prompted for their git configuration, which
+will be useful when we use Genesis templates to create deployments later.
+
+Using named accounts will also provide auditing (via the `sudo` logs) as well as
 isolation (people won't step on each others toes on the filesystem) and
 customization (everyone gets to set their own prompt / shell / `$EDITOR`).
 
@@ -268,17 +284,18 @@ bosh not installed
 ### SSH Config
 
 On your local computer, setup an entry in the `~/.ssh/config` file for your
-bastion host.  Substituting the correct IP.
+bastion host - substituting the correct IP and SSH key.
 
 ```
 Host bastion
   Hostname 52.43.51.197
+  IdentityFile ~/.ssh/id_rsa
   User juser
 ```
 
 ### Test Login
 
-After you've logged in as `ubuntu` once, created your user, logged out and
+After you've logged in as `ubuntu` once, created your user, logged out, and
 configured your SSH config, you'll be ready to try to connect via the `Host`
 alias.
 
@@ -362,6 +379,10 @@ interacting with Vault (`safe`), but also the Vault server daemon itself.
 Were going to start the server and do an overview of what the output means.  To
 start the **vault-init**, run the `vault server` with the `-dev` flag.
 
+**NOTE**: When you run the `vault server -dev` command, we recommend running it
+in the foreground using either a `tmux` session or a separate ssh tab.  Also, we
+do need to capture the output of the `Root Token`.
+
 ```
 $ vault server -dev
 ==> WARNING: Dev mode is enabled!
@@ -386,10 +407,6 @@ Unseal Key:
 781d77046dcbcf77d1423623550d28f152d9b419e09df0c66b553e1239843d89
 Root Token: c888c5cd-bedd-d0e6-ae68-5bd2debee3b7
 ```
-
-**NOTE**: When you run the `vault server -dev` command, we recommend running it
-in the foreground using either a `tmux` session or a separate ssh tab.  Also, we
-do need to capture the output of the `Root Token`.
 
 #### Setup vault-init
 

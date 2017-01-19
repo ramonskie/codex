@@ -82,8 +82,9 @@ Make note of the public network's UUID.  It will be needed in the next step.
 ## Use Terraform
 
 Once the requirements for OpenStack are met, we can put it all together and build out
-your shiny new networks, routers, security groups and bastion host. Change
-to the `terraform/openstack` sub-directory of this repository before we begin.
+your shiny new networks, routers, security groups and bastion host. Before we begin,
+copy the contents of `CODEX_ROOT/terraform/openstack` to your own Github repository
+and then change to that directory.
 
 The configuration directly matches the [Network Plan][netplan] for the demo
 environment.  When deploying in other environments like production, some tweaks
@@ -112,6 +113,9 @@ by adding:
 region     = "RegionTwo"
 network    = "10.42"
 ```
+
+To see what variables can be overridden in `openstack.tfvars`, and their default
+values, please look at the top of `openstack.tf`.
 
 You may change some default settings according to the real cases you are
 working on. For example, you can change `flavor_id` (default is `3`, which is
@@ -144,12 +148,17 @@ Now, to pull the trigger, run `make deploy`:
 $ make deploy
 ```
 
-Terraform will connect to OpenStack, using your **User Name**, **Password**, and
-**Tenant Name**, and spin up all the things it needs.  When it finishes, you should
-be left with a bunch of subnets, security groups, and a bastion host.
+Terraform will connect to OpenStack using the credentials you provided in the \*.tfvars
+file and spin up all the things it needs.  When it finishes, you should be left
+with a bunch of subnets, security groups, and a bastion host.
 
-If you run into issues before this point refer to our [troubleshooting][troubleshooting_openstack]
-doc for help.
+**NOTE:** Circling back around, once you have deployed your Terraform configuration
+you will need to push it to your Github repository. When you ran `make manifest`
+Terraform created a \*.tfplan file which is based on not only the current \*.tf
+and \*.tfvars files but also on the \*.tfstate file from the last run. If there is
+no \*.tfstate file then Terraform will assume you are starting a new configuration.
+When making changes in the future, you'll want to make sure to push them after the
+`make deploy` to ensure that the \*.tfstate file you have in Github is current and correct.
 
 ### Connect to Bastion
 

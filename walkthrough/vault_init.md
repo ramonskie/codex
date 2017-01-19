@@ -24,6 +24,10 @@ interacting with Vault (`safe`), but also the Vault server daemon itself.
 Were going to start the server and do an overview of what the output means.  To
 start the **vault-init**, run the `vault server` with the `-dev` flag.
 
+**NOTE**: When you run the `vault server -dev` command, we recommend running it
+in the foreground using either a `tmux` session or a separate ssh tab.  Also, we
+do need to capture the output of the `Root Token`.
+
 ```
 $ vault server -dev
 ==> WARNING: Dev mode is enabled!
@@ -48,10 +52,6 @@ Unseal Key:
 781d77046dcbcf77d1423623550d28f152d9b419e09df0c66b553e1239843d89
 Root Token: c888c5cd-bedd-d0e6-ae68-5bd2debee3b7
 ```
-
-**NOTE**: When you run the `vault server -dev` command, we recommend running it
-in the foreground using either a `tmux` session or a separate ssh tab.  Also, we
-do need to capture the output of the `Root Token`.
 
 #### Setup vault-init
 
