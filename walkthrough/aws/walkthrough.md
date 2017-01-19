@@ -816,6 +816,7 @@ networks:
 ```
 
 (( insert_file concourse_test.md ))
+(( insert_file concourse_pipelines_setup.md ))
 (( insert_file sites_and_envs_intro.md ))
 (( insert_file alpha_boshlite_intro.md ))
 Now lets try to deploy:
