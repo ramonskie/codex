@@ -2890,7 +2890,7 @@ networks:
   subnets:
   - range: 10.4.25.0/24
     static: [10.4.25.4 - 10.4.25.100]
-    reserved: [10.4.25.2 - 10.4.25.3] # amazon reserves these
+    reserved: [10.4.25.2 - 10.4.25.3]
     gateway: 10.4.25.1
     cloud_properties:
       net_id: ecbf813d-77af-4919-9c80-279d9eaf10c6
@@ -3023,7 +3023,6 @@ Lather, rinse, repeat for all additional environments (dev, prod, loadtest, what
 [spruce-129]:        https://github.com/geofffranks/spruce/issues/129
 [slither]:           http://slither.io
 [troubleshooting]:   troubleshooting.md
-[use_terraform]:     aws.md#use-terraform
 [verify_ssh]:        https://github.com/starkandwayne/codex/blob/master/troubleshooting.md#verify-keypair
 [cf-env]:            https://github.com/cloudfoundry-community/cf-env
 [orgs and spaces]:   https://docs.cloudfoundry.org/concepts/roles.html
