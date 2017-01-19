@@ -94,7 +94,7 @@ or rewrites may need to be made.
 
 Create an `openstack.tfvars` file with the following configurations (substituting your
 actual values) all the other configurations have default setting in the
-`CODEX_ROOT/terraform/openstack/openstack.tf` file.
+`openstack.tf` file.
 
 ```
 tenant_name = "cf"
@@ -182,7 +182,7 @@ $ ssh -i ~/.ssh/bosh ubuntu@(( insert_parameter openstack.jumpbox_ip ))
 #### Make Manifest
 
 Let's head into the `proto/` environment directory and see if we
-can create a manifest, or (a more likely case) we still have to
+can create a manifest or (a more likely case) we still have to
 provide some critical information:
 
 ```
@@ -206,7 +206,7 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Drat. Let's focus on the `$.meta` subtree, since that's where most parameters are defined in
+Let's focus on the `$.meta` subtree, since that's where most parameters are defined in
 Genesis templates:
 
 ```
@@ -265,7 +265,7 @@ On your local computer, you can copy to the clipboard with the `pbcopy` command
 on a macOS machine:
 
 ```
-cat ~/.ssh/cf-deploy.pem | pbcopy
+cat ~/.ssh/bosh.pem | pbcopy
 <paste values to /path/to/the/openstack/key.pem>
 ```
 
@@ -368,7 +368,7 @@ IP from the associated router).  DNS needs to be the IP's provided by your
 OpenStack administrator.
 
 We identify our OpenStack-specific configuration under
-`cloud_properties`, by calling out the **Network UUID** - NOT the subnet UUID, of
+`cloud_properties` by providing the **Network UUID**, NOT the subnet UUID, of
 the internal neutron network we wish to use.  We also define the security groups
 BOSH will be bound to.
 
@@ -702,15 +702,11 @@ $ cat properties.yml
 ---
 meta:
   availability_zone: "dc01"   # Set this to match your first zone
-  external_url: "(( insert_parameter openstack.external_concourse_url ))"  # Set as Elastic IP address of the bastion host to allow testing via SSH tunnel
+  external_url: "(( insert_parameter openstack.external_concourse_url ))"  # Set as Floating IP address of the haproxy job
   ssl_pem: ~
   #  ssl_pem: (( vault meta.vault_prefix "/web_ui:pem" ))
   shield_authorized_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
 ```
-
-TODO:  The following statement is in the AWS instructions too.  Shouldn't this be the IP of CF instead of the bastion host?
-
-Be sure to replace the x.x.x.x in the external_url above with the Floating IP address of the bastion host.
 
 The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under the `web_ui:pem` key
 
@@ -751,7 +747,7 @@ jobs:
 ```
 
 (( insert_file concourse_test.md ))
-(( insert file concourse_pipelines_setup.md ))
+(( insert_file concourse_pipelines_setup.md ))
 (( insert_file sites_and_envs_intro.md ))
 (( insert_file alpha_boshlite_intro.md ))
 Now lets try to deploy:

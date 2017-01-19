@@ -22,7 +22,7 @@ Task 43 done
 VMs total: 6
 ```
 
-Smoke test HAProxy IP address:
+Verify you get a response from the `haproxy` IP address:
 
 ```
 $ curl -i 10.4.1.51
