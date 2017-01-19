@@ -58,7 +58,7 @@ vault write auth/app-id/map/user-id/your_user_id \
         value=your_app_id \
         cidr_block= your_concourse_network_block
 ```
-Keep in mind that `genesis` v1.6.0 has a default name for `app_id` and `user-id` for each deployment. Make sure you replace `your_app_id` and `your_user_id` using those default names accordingly.
+Keep in mind that `genesis` v1.6.0 has a default name for `app-id` and `user-id` for each deployment. Make sure you replace `your_app_id` and `your_user_id` using those default names accordingly.
 
 In future, we will switch to AppRole from AppId when `genesis` is ready for AppRole. For more details, please visit:  https://www.vaultproject.io/docs/auth/app-id.html
 
@@ -66,7 +66,7 @@ In future, we will switch to AppRole from AppId when `genesis` is ready for AppR
 
 We suggest downloading the fly CLI from the web UI page in your Concourse environment, so that the latest version that matches your deployment will be downloaded.
 
-Set the fly target as `concourse`. If we do not use `concourse` as target name, we will need to specify it in the `ci/setting.yml` file.
+Set the fly target as `concourse`. If we do not use `concourse` as target name, we will need to specify it in the `ci/settings.yml` file.
 
 `fly -t concourse login -c concourse_url`
 
@@ -91,14 +91,6 @@ knock                   knock
  - $.aliases.target: Please define aliases for your BOSH directors (uuid -> addr)
  - $.auth: Please define your BOSH directors in ci/boshes.yml (and remove this line)
 
-2 error(s) detected:
- - $.aliases.target: Please define aliases for your BOSH directors (uuid -> addr)
- - $.auth: Please define your BOSH directors in ci/boshes.yml (and remove this line)
-
-2 error(s) detected:
- - $.aliases.target: Please define aliases for your BOSH directors (uuid -> addr)
- - $.auth: Please define your BOSH directors in ci/boshes.yml (and remove this line)
-
 6 error(s) detected:
  - $.meta.github.owner: Please specify the name of the user / organization that owns the Github repository (in ci/settings.yml)
  - $.meta.github.private_key: Please generate an SSH Deployment Key for this repo and specify it in ci/settings.yml
@@ -107,9 +99,9 @@ knock                   knock
  - $.meta.slack.channel: Please specify the channel (#name) or user (@user) to send messages to (in ci/settings.yml)
  - $.meta.slack.webhook: Please provide a Slack Integration WebHook (in ci/settings.yml)
 ```
-We can tackle all the errors by configuring two files: `ci/boshes.yml` and `ci/setting.yml`. Before that, lets add a deployment key to the repo and write it to Vault, since we need it to configure our pipeline.
+We can tackle all the errors by configuring two files: `ci/boshes.yml` and `ci/settings.yml`. Before that, lets add a deployment key to the repo and write it to Vault, since we need it to configure our pipeline.
 
-To generate an SSH key pair, use the following commands to write it to Vault. In the git repo, add the pub key to the deploy key.
+To generate an SSH key pair, use the following commands to write it to Vault. In the git repo, add the public key to the deploy key.
 
 ```
 safe write secret/(( insert_parameter site.name ))/proto/concourse/deployment_keys "private_key_name@private_key_file"
@@ -122,11 +114,12 @@ Finally, configure the files we mentioned earlier:
 ```
 boshes.yml
 
+# The UUIDs and director URL's of all bosh directors in your pipeline go here.
 aliases:
   target:
-    your_bosh_uuid: your_bosh_director_url
-    your_bosh_uuid: your_bosh_director_url
-    your_bosh_uuid: your_bosh_director_url
+    bosh_uuid: bosh_director_url
+    bosh_uuid: bosh_director_url
+    bosh_uuid: bosh_director_url
 auth:
   https://x.x.x.x:25555:
     username: admin
@@ -141,7 +134,8 @@ auth:
 ```
 
 ```
-setting.yml
+settings.yml
+
 meta:
   name: your_pipeline_name
   env:
@@ -164,18 +158,18 @@ Note: We should never modify `ci/pipeline.yml` directly. `genesis ci repipe` wil
 
 ### Adding Smoke Tests to Pipeline
 
-If the deployment you set up pipeline for has a smoke tests errand, you can add smoke tests errand to your existing pipeline pretty easily by following the instruction below:
+If the deployment you set up pipeline for has a smoke tests errand, you can add it to your existing pipeline pretty easily by following the instruction below:
 
-First,  run `genesis ci smoke-test your_smoke_tests_errand_name`, then run `genesi ci repipe`, you will be prompted for a `y` or `N` in “apply configuration? [yN]:”, type `y` and your pipeline configuration is updated.
+First,  run `genesis ci smoke-test your_smoke_tests_errand_name`, then run `genesis ci repipe`, you will be prompted for a `y` or `N` in “apply configuration? [yN]:”, type `y` and your pipeline configuration is updated.
 
 ### How to Use Concourse UI
 
 Visit http://x.x.x.x.sslip.io in your browser, where `x.x.x.x` is the IP of the haproxy VM. You will see "*no pipelines configured" in the middle of your screen. Click the login button on the top right, choose the main team to login. The username and password is the same with what you used when you run `fly -t concourse login -c concourse_url`. After you login, you will see the pipelines listed on the left you already configured as the main team. You can click the pipeline name to look at the specific jobs in rectangle boxes of that pipeline.
 
-Click each rectangle, you can see the builds, tasks and other details about the corresponding job. To trigger a job manually, you can click the plus button on the right corner for that job. We recommend that the jobs which deploy to production environment should be manually triggered and all other jobs can be triggered automatically when the changes are pushed to the git repository.
+Click each rectangle, you can see the builds, tasks and other details about the corresponding job. To trigger a job manually, you can click the plus button on the right corner for that job. We recommend that the jobs which deploy to the production environment should be manually triggered, and all other jobs can be triggered automatically when the changes are pushed to the git repository.
 
 ### Authentication Management for Teams
 
-To be continued: how to manage authentication for teams. For main team ,how we use Github oAuth instead of Basic Auth.
+To be continued: How to manage authentication for teams. For the main team, how we use Github oAuth instead of Basic Auth.
 
 [fly]: https://concourse.ci/fly-cli.html
