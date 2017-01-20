@@ -85,7 +85,7 @@ Here's a smoke test to see if you've setup the **vault-init** correctly.
 $ safe set secret/handshake knock=knock
 knock: knock
 
-$ safe read secret/handshake
+$ safe get secret/handshake
 --- # secret/handshake
 knock: knock
 ```
