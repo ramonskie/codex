@@ -6,7 +6,7 @@ variable "user_name"        { default = "admin"}
 variable "password"         { default = "supersecret"}
 variable "auth_url"         { default = ""}
 variable "key_pair"         { default = "codex"}
-variable "bastion_image"    { default = "ubuntu-16.06"}
+variable "bastion_image"    { default = "ubuntu-16.04"}
 variable "bastion_name"     { default = "bastion"}
 variable "region"           { default = "RegionOne"}
 
@@ -196,6 +196,7 @@ resource "openstack_networking_subnet_v2" "global-infra-0-subnet" {
   name = "global-infra-0-subnet"
   network_id = "${openstack_networking_network_v2.global-infra-0.id}"
   cidr = "${var.network}.1.0/24"
+  dns_nameservers = ["8.8.8.8","8.8.4.4"]
 }
 
 resource "openstack_networking_port_v2" "global-infra-0-port" {
@@ -215,6 +216,7 @@ resource "openstack_networking_subnet_v2" "global-infra-1-subnet" {
   name = "global-infra-1-subnet"
   network_id = "${openstack_networking_network_v2.global-infra-1.id}"
   cidr = "${var.network}.2.0/24"
+  dns_nameservers = ["8.8.8.8","8.8.4.4"]
 }
 
 resource "openstack_networking_port_v2" "global-infra-1-port" {
@@ -234,6 +236,7 @@ resource "openstack_networking_subnet_v2" "global-infra-2-subnet" {
   name = "global-infra-2-subnet"
   network_id = "${openstack_networking_network_v2.global-infra-2.id}"
   cidr = "${var.network}.3.0/24"
+  dns_nameservers = ["8.8.8.8","8.8.4.4"]
 }
 
 resource "openstack_networking_port_v2" "global-infra-2-port" {
@@ -372,6 +375,11 @@ resource "openstack_networking_network_v2" "dev-cf-core-0" {
   name = "dev-cf-core-0"
 }
 
+resource "openstack_networking_port_v2" "dev-cf-core-0-port" {
+  name = "dev-cf-core-0-port"
+  network_id = "${openstack_networking_network_v2.dev-cf-core-0.id}"
+}
+
 resource "openstack_networking_subnet_v2" "dev-cf-core-0-subnet" {
   name = "dev-cf-core-0-subnet"
   network_id = "${openstack_networking_network_v2.dev-cf-core-0.id}"
@@ -386,6 +394,11 @@ resource "openstack_networking_network_v2" "dev-cf-core-1" {
   name = "dev-cf-core-1"
 }
 
+resource "openstack_networking_port_v2" "dev-cf-core-1-port" {
+  name = "dev-cf-core-1-port"
+  network_id = "${openstack_networking_network_v2.dev-cf-core-1.id}"
+}
+
 resource "openstack_networking_subnet_v2" "dev-cf-core-1-subnet" {
   name = "dev-cf-core-1-subnet"
   network_id = "${openstack_networking_network_v2.dev-cf-core-1.id}"
@@ -398,6 +411,11 @@ output "openstack_networking_network_v2.dev-cf-core-1.dev-cf-core-1-subnet.subne
 
 resource "openstack_networking_network_v2" "dev-cf-core-2" {
   name = "dev-cf-core-2"
+}
+
+resource "openstack_networking_port_v2" "dev-cf-core-2-port" {
+  name = "dev-cf-core-2-port"
+  network_id = "${openstack_networking_network_v2.dev-cf-core-2.id}"
 }
 
 resource "openstack_networking_subnet_v2" "dev-cf-core-2-subnet" {
@@ -610,6 +628,21 @@ resource "openstack_networking_router_interface_v2" "global-infra-1-to-dev-infra
 resource "openstack_networking_router_interface_v2" "global-infra-2-to-dev-infra-2" {
   router_id = "${openstack_networking_router_v2.global-to-pub.id}"
   port_id = "${openstack_networking_port_v2.dev-infra-2-port.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "global-infra-to-dev-cf-core-0" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.dev-cf-core-0-port.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "global-infra-to-dev-cf-core-1" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.dev-cf-core-1-port.id}"
+}
+
+resource "openstack_networking_router_interface_v2" "global-infra-to-dev-cf-core-2" {
+  router_id = "${openstack_networking_router_v2.global-to-pub.id}"
+  port_id = "${openstack_networking_port_v2.dev-cf-core-2-port.id}"
 }
 
 ######## Development ##########
