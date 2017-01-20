@@ -6,7 +6,7 @@ Backup jobs for SHIELD are created and maintained in the SHIELD UI:
 
 To access the SHIELD UI, go to https://(( insert_parameter openstack.shield_fip )).
 The user name is `shield` and the password can be accessed in Vault by running
-`safe get secret/dc01/proto/shield/webui:password`. We recommend also storing this
+`safe get secret/(( insert_parameter site.name ))/proto/shield/webui:password`. We recommend also storing this
 password in a password manager for convenience.
 
 In the SHIELD deployment, we defined a default schedule and retention policy as
@@ -101,7 +101,7 @@ used in the BOSH case to back up only the BOSH database itself.
 
 SHIELD currently has plugins for Redis, Mongo, Elasticsearch, and others. To see
 more information about the plugin list and relevant documentation, please check out
-the [SHIELD README](shield).
+the [SHIELD README][shield].
 
 In order to back up BOSH, Cloud Foundry, and your services you will need to use the
 schedules, retention policies, targets, and storage definitions and create a **backup job**.

@@ -1538,7 +1538,7 @@ used in the BOSH case to back up only the BOSH database itself.
 
 SHIELD currently has plugins for Redis, Mongo, Elasticsearch, and others. To see
 more information about the plugin list and relevant documentation, please check out
-the [SHIELD README](shield).
+the [SHIELD README][shield].
 
 In order to back up BOSH, Cloud Foundry, and your services you will need to use the
 schedules, retention policies, targets, and storage definitions and create a **backup job**.
@@ -3358,6 +3358,7 @@ Lather, rinse, repeat for all additional environments (dev, prod, loadtest, what
 [netplan]:           https://github.com/starkandwayne/codex/blob/master/network.md
 [ngrok-download]:    https://ngrok.com/download
 [infra-ips]:         https://github.com/starkandwayne/codex/blob/master/part3/network.md#global-infrastructure-ip-allocation
+[shield]:            https://github.com/starkandwayne/shield
 [spruce-129]:        https://github.com/geofffranks/spruce/issues/129
 [slither]:           http://slither.io
 [troubleshooting]:   troubleshooting.md
