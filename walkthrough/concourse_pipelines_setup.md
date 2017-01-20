@@ -115,11 +115,17 @@ Finally, configure the files we mentioned earlier:
 boshes.yml
 
 # The UUIDs and director URL's of all bosh directors in your pipeline go here.
+# Since we are using proto-bosh to deploy bosh-lite, dev-bosh and prod-bosh, using bosh-lite to deploy a regular bosh for pipeline alpha environment purpose, when you setup pipeline for BOSH, you will need configure for all the BOSHes which are involved.
+
 aliases:
   target:
     bosh_uuid: bosh_director_url
     bosh_uuid: bosh_director_url
     bosh_uuid: bosh_director_url
+    # if you are setting pipeline for bosh, you also need to configure deployment names and URLs
+    bosh_deployment_name: bosh_director_url
+    bosh_deployment_name: bosh_director_url
+    bosh_deployment_name: bosh_director_url
 auth:
   https://x.x.x.x:25555:
     username: admin
@@ -150,6 +156,10 @@ meta:
   slack:
     webhook: (( vault "your path to webhook url" ))
     channel: '#your_channel name'
+
+  # If you are setup pipeline for BOSH, you need to configure pause_for_existing_bosh_tasks as true
+
+  pause_for_existing_bosh_tasks: true
 
 ```
 After `genesis ci repipe` succeeds, follow the instructions it prints out to unpause your pipeline.
