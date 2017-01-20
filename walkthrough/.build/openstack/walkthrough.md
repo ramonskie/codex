@@ -607,6 +607,7 @@ this walkthrough.  We also associate this floating IP by adding the `floating` n
 directly to the `shield` job, as shown in the above manifest.
 
 (( insert_file shield_deploy.md ))
+(( insert_file shield_backup.md ))
 (( insert_file bolo_intro.md ))
 Now let's make the manifest.
 

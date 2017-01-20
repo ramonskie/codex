@@ -27,6 +27,6 @@
 	},
 	"cf_beta": {
 		"base_domain": "172.26.75.154.sslip.io",
-		"directory_key_prefix": "172.26.75.154.sslip.io"
+		"directory_key_prefix": "172-26-75-154-sslip-io"
 	}
 }

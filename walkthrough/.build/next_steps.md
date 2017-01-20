@@ -36,3 +36,4 @@ Lather, rinse, repeat for all additional environments (dev, prod, loadtest, what
 [bastion_5]:              images/bastion_step_5.png "Bolo"
 [bastion_6]:              images/bastion_step_6.png "Concourse"
 [global_network_diagram]: images/global_network_diagram.png "Global Network Diagram"
+[shield_ui]:              images/shield_ui.png "SHIELD UI"
