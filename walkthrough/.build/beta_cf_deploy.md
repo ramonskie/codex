@@ -4,8 +4,8 @@ That should be it, finally. Let's deploy!
 $ make deploy
 RSA 1024 bit CA certificates are loaded due to old openssl compatibility
 Acting as user 'admin' on '(( insert_parameter site.name ))-staging-bosh'
-Checking whether release cf/237 already exists...NO
-Using remote release 'https://bosh.io/d/github.com/cloudfoundry/cf-release?v=237'
+Checking whether release cf/250 already exists...NO
+Using remote release 'https://bosh.io/d/github.com/cloudfoundry/cf-release?v=250'
 
 Director task 6
   Started downloading remote release > Downloading remote release
@@ -15,8 +15,8 @@ Deploying
 Are you sure you want to deploy? (type 'yes' to continue): yes
 ...
 
-Started		2016-07-08 17:23:47 UTC
-Finished	2016-07-08 17:34:46 UTC
+Started		2017-01-02 17:23:47 UTC
+Finished	2017-01-02 17:34:46 UTC
 Duration	00:10:59
 
 Deployed '(( insert_parameter site.name ))-staging-cf' to '(( insert_parameter site.name ))-staging-bosh'

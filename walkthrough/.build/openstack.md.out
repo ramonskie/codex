@@ -2643,8 +2643,7 @@ properties:
 EOF
 ```
 
-This was a bit easier than it was for **proto-BOSH**, since our SHIELD public key exists now, and our
-AWS keys are already in Vault.
+This was a bit easier than it was for **proto-BOSH** since our keys are already in Vault.
 
 Verifying our changes worked, we see that we only need to provide networking configuration at this point:
 
@@ -2815,45 +2814,128 @@ And the `staging` environment inside it:
 
 ```
 $ genesis new env dc01 staging
-RSA 1024 bit CA certificates are loaded due to old openssl compatibility
-Running env setup hook: ~/ops/cf-deployments/.env_hooks/00_confirm_vault
 
- proto	http://10.10.10.6:8200
+	proto       https://10.4.1.16:8200
 
-Use this Vault for storing deployment credentials?  [yes or no] yes
-Running env setup hook: ~/ops/cf-deployments/.env_hooks/setup_certs
-Generating Cloud Foundry internal certs
-Uploading Cloud Foundry internal certs to Vault
-Running env setup hook: ~/ops/cf-deployments/.env_hooks/setup_cf_secrets
-Creating JWT Signing Key
-Creating app_ssh host key fingerprint
-Generating secrets
-Created environment dc01/staging:
-~/ops/cf-deployments/dc01/staging
-├── cloudfoundry.yml
-├── credentials.yml
-├── director.yml
-├── Makefile
-├── monitoring.yml
-├── name.yml
-├── networking.yml
-├── properties.yml
-├── README
-└── scaling.yml
+	Use this Vault for storing deployment credentials?  [yes or no] yes
+	Generating Cloud Foundry internal certs
+	Uploading Cloud Foundry internal certs to Vault
+	wrote secret/dc01/staging/cf-deployments/certs/internal_ca
+	wrote secret/dc01/staging/cf-deployments/certs/consul_client
+	wrote secret/dc01/staging/cf-deployments/certs/consul_server
+	wrote secret/dc01/staging/cf-deployments/certs/etcd_client
+	wrote secret/dc01/staging/cf-deployments/certs/etcd_server
+	wrote secret/dc01/staging/cf-deployments/certs/etcd_peer
+	wrote secret/dc01/staging/cf-deployments/certs/blobstore
+	wrote secret/dc01/staging/cf-deployments/certs/uaa
+	wrote secret/dc01/staging/cf-deployments/certs/bbs_client
+	wrote secret/dc01/staging/cf-deployments/certs/bbs
+	wrote secret/dc01/staging/cf-deployments/certs/rep_client
+	wrote secret/dc01/staging/cf-deployments/certs/rep
+	wrote secret/dc01/staging/cf-deployments/certs/doppler
+	wrote secret/dc01/staging/cf-deployments/certs/metron
+	wrote secret/dc01/staging/cf-deployments/certs/trafficcontroller
+	Creating JWT Signing Key
+	Creating app_ssh host key fingerprint
+	Generating secrets
+	Created environment dc01/staging:
+	~/ops/cf-deployments-deployments/dc01/staging
+	├── cloudfoundry.yml
+	├── credentials.yml
+	├── director.yml
+	├── Makefile
+	├── monitoring.yml
+	├── name.yml
+	├── networking.yml
+	├── properties.yml
+	├── README
+	└── scaling.yml
 
-0 directories, 10 files
-
+	0 directories, 10 files
 ```
 
 As you might have guessed, the next step will be to see what parameters we need to fill in:
 
 ```
-$ cd us-west-2/staging
+$ cd dc01/staging
 $ make manifest
-```
+71 error(s) detected:
+ - $.meta.azs.z1: What availability zone should the *_z1 vms be placed in?
+ - $.meta.azs.z2: What availability zone should the *_z2 vms be placed in?
+ - $.meta.azs.z3: What availability zone should the *_z3 vms be placed in?
+ - $.meta.cf.base_domain: Enter the Cloud Foundry base domain
+ - $.meta.cf.blobstore_config.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.meta.cf.blobstore_config.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.meta.cf.blobstore_config.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.meta.cf.blobstore_config.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.meta.cf.directory_key_prefix: Replace the period in CF base domain with dash
+ - $.meta.dns: Enter the DNS server for your VPC
+ - $.meta.router_security_groups: Enter the security groups which should be applied to the gorouter VMs
+ - $.meta.security_groups: Enter the security groups which should be applied to CF VMs
+ - $.networks.cf1.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.cf1.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.cf1.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.cf1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.cf1.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.cf2.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.cf2.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.cf2.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.cf2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.cf2.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.cf3.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.cf3.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.cf3.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.cf3.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.cf3.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.router1.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.router1.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.router1.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.router1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.router1.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.router2.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.router2.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.router2.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.router2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.router2.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.runner1.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.runner1.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.runner1.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.runner1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.runner1.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.runner2.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.runner2.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.runner2.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.runner2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.runner2.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.runner3.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.runner3.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.runner3.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.runner3.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.runner3.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.properties.cc.buildpacks.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.properties.cc.buildpacks.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.properties.cc.buildpacks.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.properties.cc.buildpacks.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.properties.cc.droplets.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.properties.cc.droplets.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.properties.cc.droplets.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.properties.cc.droplets.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.properties.cc.packages.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.properties.cc.packages.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.properties.cc.packages.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.properties.cc.packages.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.properties.cc.resource_pool.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.properties.cc.resource_pool.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.properties.cc.resource_pool.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.properties.cc.resource_pool.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.properties.cc.security_group_definitions.load_balancer.rules: Specify the rules for allowing access for CF apps to talk to the CF Load Balancer External IPs
+ - $.properties.cc.security_group_definitions.services.rules: Specify the rules for allowing access to CF services subnets
+ - $.properties.cc.security_group_definitions.user_bosh_deployments.rules: Specify the rules for additional BOSH user services that apps will need to talk to
 
-```
-TODO:  INSERT OPENSTACK ERRORS HERE
+
+Failed to merge templates; bailing...
+Makefile:22: recipe for target 'manifest' failed
+make: *** [manifest] Error 5
 ```
 
 Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those (no need to create the blobstore S3 buckets yourself):
@@ -2894,7 +2976,7 @@ properties:
     servers:
     - 10.4.20.105
   loggregator_endpoint:
-    host: 10.4.20.105 # TODO: consul/dns/LB ???
+    host: 10.4.20.105
     port: 3456
 ```
 
@@ -2951,79 +3033,7 @@ jobs:
    instances: 0
 ```
 
-In addition, let us generate our self-signed certificates for CF:
-Now it's time to create our Elastic Load Balancer that will be in front of the `gorouters`, but as we will need TLS termination we then need to create a SSL/TLS certificate for our domain.
-
-Create first the CA Certificate:
-
-```
-$ mkdir -p /tmp/certs
-$ cd /tmp/certs
-$ certstrap init --common-name "CertAuth"
-Enter passphrase (empty for no passphrase):
-
-Enter same passphrase again:
-
-Created out/CertAuth.key
-Created out/CertAuth.crt
-Created out/CertAuth.crl
-```
-
-Then create the certificates for your domain:
-
-```
-$ certstrap request-cert -common-name *.staging.<your domain> -domain *.system.staging.<your domain>,*.run.staging.<your domain>,*.login.staging.<your domain>,*.uaa.staging.<your domain>
-
-Enter passphrase (empty for no passphrase):
-
-Enter same passphrase again:
-
-Created out/*.staging.<your domain>.key
-Created out/*.staging.<your domain>.csr
-```
-
-And last, sign the domain certificates with the CA certificate:
-
-```
-$ certstrap sign *.staging.<your domain> --CA CertAuth
-Created out/*.staging.<your domain>.crt from out/*.staging.<your domain>.csr signed by out/CertAuth.key
-```
-
-For safety, let's store the certificates in Vault:
-
-```
-$ cd out
-$ safe write secret/dc01/staging/cf/tls/ca "csr@CertAuth.crl"
-$ safe write secret/dc01/staging/cf/tls/ca "crt@CertAuth.crt"
-$ safe write secret/dc01/staging/cf/tls/ca "key@CertAuth.key"
-$ safe write secret/dc01/staging/cf/tls/domain "crt@*.staging.<your domain>.crt"
-$ safe write secret/dc01/staging/cf/tls/domain "csr@*.staging.<your domain>.csr"
-$ safe write secret/dc01/staging/cf/tls/domain "key@*.staging.<your domain>.key"
-```
-
-Lastly, let's make sure to add our Cloud Foundry domain to properties.yml:
-
-```
----
-meta:
-  skip_ssl_validation: true
-  cf:
-    base_domain: staging.<your domain> # <- Your CF domain
-    ...
-```
-
-
-And let's see what's left to fill out now:
-
-```
-$ make deploy
-
-TODO:  INSERT OPENSTACK ERRORS HERE
-```
-
-All of those parameters look like they're networking related. Time to start building out the `networking.yml` file.
-
-Now, we can consult our [Network Plan][netplan] for the subnet information,  cross referencing with terraform output to get the subnet IDs:
+Time to start building out the `networking.yml` file. Let's consult our [Network Plan][netplan] for the subnet information, cross referencing with Terraform output to get the subnet IDs:
 
 ```
 $ cat networking.yml
@@ -3143,8 +3153,8 @@ That should be it, finally. Let's deploy!
 $ make deploy
 RSA 1024 bit CA certificates are loaded due to old openssl compatibility
 Acting as user 'admin' on 'dc01-staging-bosh'
-Checking whether release cf/237 already exists...NO
-Using remote release 'https://bosh.io/d/github.com/cloudfoundry/cf-release?v=237'
+Checking whether release cf/250 already exists...NO
+Using remote release 'https://bosh.io/d/github.com/cloudfoundry/cf-release?v=250'
 
 Director task 6
   Started downloading remote release > Downloading remote release
@@ -3154,8 +3164,8 @@ Deploying
 Are you sure you want to deploy? (type 'yes' to continue): yes
 ...
 
-Started		2016-07-08 17:23:47 UTC
-Finished	2016-07-08 17:34:46 UTC
+Started		2017-01-02 17:23:47 UTC
+Finished	2017-01-02 17:34:46 UTC
 Duration	00:10:59
 
 Deployed 'dc01-staging-cf' to 'dc01-staging-bosh'

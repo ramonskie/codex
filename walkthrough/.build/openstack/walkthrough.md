@@ -923,8 +923,7 @@ properties:
 EOF
 ```
 
-This was a bit easier than it was for **proto-BOSH**, since our SHIELD public key exists now, and our
-AWS keys are already in Vault.
+This was a bit easier than it was for **proto-BOSH** since our keys are already in Vault.
 
 Verifying our changes worked, we see that we only need to provide networking configuration at this point:
 
@@ -986,12 +985,85 @@ EOF
 As you might have guessed, the next step will be to see what parameters we need to fill in:
 
 ```
-$ cd us-west-2/staging
+$ cd (( insert_parameter site.name ))/staging
 $ make manifest
-```
+71 error(s) detected:
+ - $.meta.azs.z1: What availability zone should the *_z1 vms be placed in?
+ - $.meta.azs.z2: What availability zone should the *_z2 vms be placed in?
+ - $.meta.azs.z3: What availability zone should the *_z3 vms be placed in?
+ - $.meta.cf.base_domain: Enter the Cloud Foundry base domain
+ - $.meta.cf.blobstore_config.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.meta.cf.blobstore_config.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.meta.cf.blobstore_config.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.meta.cf.blobstore_config.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.meta.cf.directory_key_prefix: Replace the period in CF base domain with dash
+ - $.meta.dns: Enter the DNS server for your VPC
+ - $.meta.router_security_groups: Enter the security groups which should be applied to the gorouter VMs
+ - $.meta.security_groups: Enter the security groups which should be applied to CF VMs
+ - $.networks.cf1.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.cf1.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.cf1.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.cf1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.cf1.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.cf2.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.cf2.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.cf2.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.cf2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.cf2.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.cf3.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.cf3.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.cf3.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.cf3.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.cf3.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.router1.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.router1.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.router1.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.router1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.router1.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.router2.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.router2.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.router2.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.router2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.router2.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.runner1.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.runner1.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.runner1.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.runner1.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.runner1.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.runner2.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.runner2.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.runner2.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.runner2.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.runner2.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.networks.runner3.subnets.0.cloud_properties.net_id: Enter the OpenStack Network ID for this subnet
+ - $.networks.runner3.subnets.0.gateway: Enter the Gateway for this subnet
+ - $.networks.runner3.subnets.0.range: Enter the CIDR address for this subnet
+ - $.networks.runner3.subnets.0.reserved: Enter the reserved IP ranges for this subnet
+ - $.networks.runner3.subnets.0.static: Enter the static IP ranges for this subnet
+ - $.properties.cc.buildpacks.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.properties.cc.buildpacks.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.properties.cc.buildpacks.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.properties.cc.buildpacks.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.properties.cc.droplets.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.properties.cc.droplets.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.properties.cc.droplets.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.properties.cc.droplets.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.properties.cc.packages.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.properties.cc.packages.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.properties.cc.packages.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.properties.cc.packages.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.properties.cc.resource_pool.fog_connection.aws_access_key_id: What is the access key id for the blobstore S3 buckets?
+ - $.properties.cc.resource_pool.fog_connection.aws_secret_access_key: What is the secret key for the blobstore S3 buckets?
+ - $.properties.cc.resource_pool.fog_connection.host: What is the host name for the blobstore S3 buckets?
+ - $.properties.cc.resource_pool.fog_connection.port: What is the port for the blobstore S3 buckets?
+ - $.properties.cc.security_group_definitions.load_balancer.rules: Specify the rules for allowing access for CF apps to talk to the CF Load Balancer External IPs
+ - $.properties.cc.security_group_definitions.services.rules: Specify the rules for allowing access to CF services subnets
+ - $.properties.cc.security_group_definitions.user_bosh_deployments.rules: Specify the rules for additional BOSH user services that apps will need to talk to
 
-```
-TODO:  INSERT OPENSTACK ERRORS HERE
+
+Failed to merge templates; bailing...
+Makefile:22: recipe for target 'manifest' failed
+make: *** [manifest] Error 5
 ```
 
 Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those (no need to create the blobstore S3 buckets yourself):
@@ -1032,7 +1104,7 @@ properties:
     servers:
     - 10.4.20.105
   loggregator_endpoint:
-    host: 10.4.20.105 # TODO: consul/dns/LB ???
+    host: 10.4.20.105
     port: 3456
 ```
 
@@ -1089,21 +1161,7 @@ jobs:
    instances: 0
 ```
 
-In addition, let us generate our self-signed certificates for CF:
-(( insert_file beta_cf_cacert.md ))
-(( insert_file beta_cf_domain.md ))
-
-And let's see what's left to fill out now:
-
-```
-$ make deploy
-
-TODO:  INSERT OPENSTACK ERRORS HERE
-```
-
-All of those parameters look like they're networking related. Time to start building out the `networking.yml` file.
-
-Now, we can consult our [Network Plan][netplan] for the subnet information,  cross referencing with terraform output to get the subnet IDs:
+Time to start building out the `networking.yml` file. Let's consult our [Network Plan][netplan] for the subnet information, cross referencing with Terraform output to get the subnet IDs:
 
 ```
 $ cat networking.yml
