@@ -1,13 +1,13 @@
 {
 	"service": {
-		"short_name": "Openstack",
-		"long_name": "Openstack"
+		"short_name": "OpenStack",
+		"long_name": "OpenStack"
 	},
 	"template_name": "openstack",
 	"cpi_name": "openstack",
 	"site": {
 		"name": "dc01",
-		"description": "Openstack Datacenter"
+		"description": "OpenStack Datacenter"
 	},
 	"stemcell": {
 		"name": "bosh-aws-xen-hvm-ubuntu-trusty-go_agent",
@@ -21,8 +21,12 @@
 		"bosh_dns_ips": "10.4.1.77, 10.4.1.78",
 		"shield_fip": "172.26.75.121",
 		"bolo_fip": "172.26.75.114",
-		"external_concourse_url": "https://ci.172.26.75.117.sslip.io",
+		"external_concourse_url": "https://ci.172.26.75.115.sslip.io",
 		"concourse_fip": "172.26.75.115",
 		"boshlite_fip": "172.26.75.124"
+	},
+	"cf_beta": {
+		"base_domain": "172.26.75.154.sslip.io",
+		"directory_key_prefix": "172-26-75-154-sslip-io"
 	}
 }

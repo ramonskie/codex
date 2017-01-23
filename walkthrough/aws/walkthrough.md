@@ -816,6 +816,7 @@ networks:
 ```
 
 (( insert_file concourse_test.md ))
+(( insert_file concourse_pipelines_setup.md ))
 (( insert_file sites_and_envs_intro.md ))
 (( insert_file alpha_boshlite_intro.md ))
 Now lets try to deploy:
@@ -1493,3 +1494,9 @@ Amazon has per-region limits for different types of resources. Check what resour
 
 (( insert_file beta_cf_push_app.md ))
 (( insert_file next_steps.md ))
+
+AWS-Specific Links:
+[amazon-region-doc]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
+[aws]:               https://signin.aws.amazon.com/console
+[aws-subnets]:       http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
+[az]:                http://aws.amazon.com/about-aws/global-infrastructure/

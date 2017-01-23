@@ -22,12 +22,12 @@ Task 43 done
 VMs total: 6
 ```
 
-Smoke test HAProxy IP address:
+Verify you get a response from the `haproxy` IP address:
 
 ```
 $ curl -i 10.4.1.51
 HTTP/1.1 200 OK
-Date: Thu, 07 Jul 2016 04:50:05 GMT
+Date: Thu, 02 Jan 2017 04:50:05 GMT
 Content-Type: text/html; charset=utf-8
 Transfer-Encoding: chunked
 
@@ -46,7 +46,3 @@ $ ssh -L 8080:10.4.1.51:80 user@ci.x.x.x.x.sslip.io -i path_to_your_private_key
 and hit http://localhost:8080 to get the Concourse UI. Be sure to replace `user`
 with the `jumpbox` username on the bastion host and x.x.x.x with the IP address
 of the bastion host.
-
-### Setup Pipelines Using Concourse
-
-TODO: Need an example to show how to setup pipeline for deployments using Concourse.

@@ -123,8 +123,8 @@ Director task 12
 ...
 Task 12 done
 
-Started		2016-07-15 14:47:45 UTC
-Finished	2016-07-15 14:51:28 UTC
+Started		2017-01-02 14:47:45 UTC
+Finished	2017-01-02 14:51:28 UTC
 Duration	00:03:43
 
 Deployed `bosh-lite-alpha-cf' to `(( insert_parameter site.name ))-try-anything-bosh-lite'
@@ -153,8 +153,8 @@ Director task 18
 
 Task 18 done
 
-Started         2016-10-05 14:15:16 UTC
-Finished        2016-10-05 14:18:12 UTC
+Started         2017-01-02 14:15:16 UTC
+Finished        2017-01-02 14:18:12 UTC
 Duration        00:02:56
 
 [stdout]

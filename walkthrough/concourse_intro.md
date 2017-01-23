@@ -4,11 +4,11 @@
 
 ### Deploying Concourse
 
-If we're not already targeting the ops vault, do so now to save frustration later.
+Make sure you are targeting the proto vault:
 
 ```
-$ safe target proto
-Now targeting proto at https://10.4.1.16:8200
+$ safe target
+Currently targeting proto at https://10.4.1.16:8200
 ```
 
 

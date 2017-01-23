@@ -23,8 +23,7 @@ $ bosh vms (( insert_parameter site.name ))-proto-vault
 Let's target the vault at 10.4.1.16:
 
 ```
-$ export VAULT_ADDR=https://10.4.1.16:8200
-$ export VAULT_SKIP_VERIFY=1
+$ export VAULT_ADDR=https://10.4.1.16:8200 && export VAULT_SKIP_VERIFY=1
 ```
 
 We have to set `$VAULT_SKIP_VERIFY` to a non-empty value because we
@@ -34,8 +33,8 @@ used self-signed certificates when we deployed our Vault. The error message is a
 !! Get https://10.4.1.16:8200/v1/secret?list=1: x509: cannot validate certificate for 10.4.1.16 because it doesn't contain any IP SANs
 ```
 
-Ideally, you'll be working with real certificates, and won't have
-to perform this step.
+Ideally, in a production-ready environment you will not be using self-signed
+certificates. In that case, you would skip this step.
 
 Let's initialize the Vault:
 
@@ -177,3 +176,7 @@ we can kill the **vault-init** server process!
 ```
 $ sudo pkill vault
 ```
+
+**NOTE:** Since the `init` Vault is no longer valid, you may want to delete its
+configuration out of your `~/.saferc` file by removing the `init: http://127.0.0.1:8200`
+line and its associated target.

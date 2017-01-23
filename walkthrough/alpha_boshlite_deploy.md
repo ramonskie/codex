@@ -38,8 +38,8 @@ Director task 58
 ...
 Task 58 done
 
-Started		2016-07-14 19:14:31 UTC
-Finished	2016-07-14 19:17:42 UTC
+Started		2017-01-02 19:14:31 UTC
+Finished	2017-01-02 19:17:42 UTC
 Duration	00:03:11
 
 Deployed `(( insert_parameter site.name ))-alpha-bosh-lite' to `(( insert_parameter site.name ))-proto-bosh'
