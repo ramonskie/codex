@@ -705,11 +705,11 @@ meta:
   availability_zone: "dc01"   # Set this to match your first zone
   external_url: "(( insert_parameter openstack.external_concourse_url ))"  # Set as Floating IP address of the haproxy job
   ssl_pem: ~
-  #  ssl_pem: (( vault meta.vault_prefix "/web_ui:pem" ))
+  #  ssl_pem: (( vault meta.vault_prefix "/certs/haproxy:your_haproxy_domain" ))
   shield_authorized_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
 ```
 
-The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under the `web_ui:pem` key
+The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under `/certs/haproxy:your_haproxy_domain` as specified in the commented line about `ssl_pem` path above.
 
 For networking, we put this inside `proto` environment level.
 
