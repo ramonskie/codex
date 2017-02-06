@@ -74,7 +74,7 @@ Some sample commands are as follows (these will vary depending on the physical s
   3rd party SDN plugin):
 ```
 neutron net-create public --provider:network_type vlan --provider:physical_network physnet1 --provider:segmentation_id 100 --tenant-id=3c155e766d1d44718cd35765c709fae1 --shared --router:external=True
-neutron subnet-create public 	172.26.75.0/24 --disable-dhcp --allocation-pool start=172.26.75.110,end=172.26.75.250 --gateway 172.26.75.1
+neutron subnet-create public 	(( insert_parameter openstack.public_net_prefix )).0/24 --disable-dhcp --allocation-pool start=(( insert_parameter openstack.public_net_prefix )).110,end=(( insert_parameter openstack.public_net_prefix )).250 --gateway (( insert_parameter openstack.public_net_prefix )).1
 ```
 
 Make note of the public network's UUID.  It will be needed in the next step.
@@ -419,9 +419,9 @@ $ cat properties.yml
 meta:
   openstack:
     azs:
-      z1: dc01
-      z2: dc01
-      z3: dc01
+      z1: (( insert_parameter site.name ))
+      z2: (( insert_parameter site.name ))
+      z3: (( insert_parameter site.name ))
 
 properties:
   vault:
@@ -702,11 +702,11 @@ Again starting with Meta lines in `~/ops/concourse-deployments/(( insert_paramet
 $ cat properties.yml
 ---
 meta:
-  availability_zone: "dc01"   # Set this to match your first zone
+  availability_zone: "(( insert_parameter site.name ))"   # Set this to match your first zone
   external_url: "(( insert_parameter openstack.external_concourse_url ))"  # Set as Floating IP address of the haproxy job
   ssl_pem: ~
   #  ssl_pem: (( vault meta.vault_prefix "/certs/haproxy:your_haproxy_domain" ))
-  shield_authorized_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
+  shield_authorized_key: (( vault "secret/(( insert_parameter site.name ))/proto/shield/keys/core:public" ))
 ```
 
 The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under `/certs/haproxy:your_haproxy_domain` as specified in the commented line about `ssl_pem` path above.
@@ -857,7 +857,7 @@ $ cat properties.yml
 meta:
   openstack:
     azs:
-      z1: dc01
+      z1: (( insert_parameter site.name ))
   port_forwarding_rules:
     - internal_ip:   10.244.0.34
       internal_port: 80
@@ -903,8 +903,8 @@ meta:
     api_key:  (( vault meta.vault_prefix "/openstack:api_key" ))
     tenant:   (( vault meta.vault_prefix "/openstack:tenant" ))
     username: (( vault meta.vault_prefix "/openstack:username" ))
-    auth_url: http://identity.openvdc.lab:5000/v2.0
-    region: openvdc-dc01
+    auth_url: (( insert_parameter openstack.auth_url ))
+    region: (( insert_parameter openstack.region ))
 cloud_provider:
   properties:
     openstack:
@@ -971,7 +971,7 @@ jobs:
       static_ips: (( static_ips(0) ))
     - name: floating
       static_ips:
-      - 172.26.75.122
+      - (( insert_parameter openstack.public_net_prefix )).122
 
 cloud_provider:
   properties:
@@ -1087,7 +1087,7 @@ meta:
         aws_secret_access_key: (( vault "secret/s3:secret_key" ))
         scheme: http
         # host: (( get "object." + meta.openstack.domain ))
-        host: 172.26.73.168
+        host: 192.168.8.168
         port: 8080
         # Required
         path_style: true
@@ -1114,9 +1114,9 @@ Also, let's fill out `scaling.yml` so we can more easily scale out our Availabil
 ```
 meta:
   azs:
-    z1: dc01
-    z2: dc01
-    z3: dc01
+    z1: (( insert_parameter site.name ))
+    z2: (( insert_parameter site.name ))
+    z3: (( insert_parameter site.name ))
 jobs:
  - name: access_z1
    instances: 1
@@ -1258,7 +1258,7 @@ jobs:
     default: [dns, gateway]
   - name: floating
     static_ips:
-    - 172.26.75.125
+    - (( insert_parameter openstack.public_net_prefix )).125
 - name: api_z2
   networks:
   - name: cf2

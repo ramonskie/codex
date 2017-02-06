@@ -3,7 +3,7 @@
 ## Overview
 
 Welcome to the Stark & Wayne guide to deploying Cloud Foundry on OpenStack.
-  This guide provides the steps to create authentication credentials,
+This guide provides the steps to create authentication credentials,
 generate the underlying cloud infrastructure, then use Terraform to prepare a bastion
 host.
 
@@ -29,7 +29,8 @@ package is available through the power of Concourse pipelines.
 ![Levels of Bosh][levels_of_bosh]
 
 In the above diagram, BOSH (1) is the **proto-BOSH**, while BOSH (2) and BOSH (3)
-are the per-site BOSH Directors.
+are the per-site BOSH Directors.  Note that it is the proto-BOSH ((( insert_paremeter site.name ))-proto-openvdc)
+that deploys Vault, Concourse, Prometheus, SHIELD as well as the other BOSH directors.
 
 Now it's time to setup the credentials.
 
@@ -106,7 +107,7 @@ Some sample commands are as follows (these will vary depending on the physical s
   3rd party SDN plugin):
 ```
 neutron net-create public --provider:network_type vlan --provider:physical_network physnet1 --provider:segmentation_id 100 --tenant-id=3c155e766d1d44718cd35765c709fae1 --shared --router:external=True
-neutron subnet-create public 	172.26.75.0/24 --disable-dhcp --allocation-pool start=172.26.75.110,end=172.26.75.250 --gateway 172.26.75.1
+neutron subnet-create public 	192.168.10.0/24 --disable-dhcp --allocation-pool start=192.168.10.110,end=192.168.10.250 --gateway 192.168.10.1
 ```
 
 Make note of the public network's UUID.  It will be needed in the next step.
@@ -132,9 +133,9 @@ actual values) all the other configurations have default setting in the
 tenant_name = "cf"
 user_name = "cfadmin"
 password = "putyourpasswordhere"
-auth_url = "http://identity.openvdc.lab:5000/v2.0"
+auth_url = "http://identity.mydatacenter.io:5000/v2.0"
 key_pair = "bosh"
-region = "openvdc-dc01"
+region = "os-dc1"
 pub_net_uuid = "09b03d93-45f8-4bea-b3b8-7ad9169f23d5"
 ```
 
@@ -204,7 +205,7 @@ will change in a little bit though when we create a new user, so don't get too
 comfy.
 
 ```
-$ ssh -i ~/.ssh/bosh ubuntu@172.26.75.117
+$ ssh -i ~/.ssh/bosh ubuntu@192.168.10.117
 ```
 
 ### Add User
@@ -341,7 +342,7 @@ There are three layers to `genesis` templates.
 
 Sometimes the site level name can be a bit tricky because each IaaS divides things
 differently.  With OpenStack we suggest a default of the OpenStack Datacenter you're using, for
-example: `dc01`.
+example: `os-dc1`.
 
 ### Environment Name
 
@@ -489,11 +490,11 @@ genesis new site --template <name> <site_name>
 ```
 
 The template `<name>` will be `openstack` because that's our IaaS we're working with and
-we recommend the `<site_name>` default to the OpenStack Datacenter, ex. `dc01`.
+we recommend the `<site_name>` default to the OpenStack Datacenter, ex. `os-dc1`.
 
 ```
-$ genesis new site --template openstack dc01
-Created site dc01 (from template openstack):
+$ genesis new site --template openstack os-dc1
+Created site os-dc1 (from template openstack):
 ~/ops/bosh-deployments/openstack
 ├── README
 └── site
@@ -515,19 +516,19 @@ Created site dc01 (from template openstack):
 ```
 
 Finally, let's create our new environment, and name it `proto`
-(that's `dc01/proto`, formally speaking).
+(that's `os-dc1/proto`, formally speaking).
 
 ```
-$ genesis new env --type bosh-init dc01 proto
+$ genesis new env --type bosh-init os-dc1 proto
 Running env setup hook: ~/ops/bosh-deployments/.env_hooks/setup
 
  init  http://127.0.0.1:8200
 
 Use this Vault for storing deployment credentials?  [yes or no]
 yes
-Setting up credentials in vault, under secret/dc01/proto/bosh
+Setting up credentials in vault, under secret/os-dc1/proto/bosh
 .
-└── secret/dc01/proto/bosh
+└── secret/os-dc1/proto/bosh
     ├── blobstore/
     │   ├── agent
     │   └── director
@@ -539,8 +540,8 @@ Setting up credentials in vault, under secret/dc01/proto/bosh
     └── vcap
 
 
-Created environment dc01/:
-~/ops/bosh-deployments/dc01/proto
+Created environment os-dc1/:
+~/ops/bosh-deployments/os-dc1/proto
 ├── credentials.yml
 ├── Makefile
 ├── name.yml
@@ -555,7 +556,7 @@ Created environment dc01/:
 you'll run into problems with your deployment.
 
 The template helpfully generated all new credentials for us and stored them in
-our **vault-init**, under the `secret/dc01/proto/bosh` subtree.  Later, we'll
+our **vault-init**, under the `secret/os-dc1/proto/bosh` subtree.  Later, we'll
 migrate this subtree over to our real Vault, once it is up and spinning.
 
 #### Make Manifest
@@ -565,7 +566,7 @@ can create a manifest or (a more likely case) we still have to
 provide some critical information:
 
 ```
-$ cd ~/ops/bosh-deployments/dc01/proto
+$ cd ~/ops/bosh-deployments/os-dc1/proto
 $ make manifest
 9 error(s) detected:
  - $.cloud_provider.properties.openstack.default_key_name: What is your full key name?
@@ -606,8 +607,8 @@ meta:
     api_key:  (( vault meta.vault_prefix "/openstack:api_key" ))
     tenant:   (( vault meta.vault_prefix "/openstack:tenant" ))
     username: (( vault meta.vault_prefix "/openstack:username" ))
-    auth_url: http://identity.openvdc.lab:5000/v2.0
-    region: openvdc-dc01
+    auth_url: http://identity.mydatacenter.io:5000/v2.0
+    region: os-dc1
 ```
 
 Configure the OpenStack credentials by pointing
@@ -615,7 +616,7 @@ Genesis to the Vault.  Let's go put those credentials in the
 Vault:
 
 ```
-$ export VAULT_PREFIX=secret/dc01/proto/openvdc
+$ export VAULT_PREFIX=secret/os-dc1/proto/os-dc1
 $ safe set ${VAULT_PREFIX}/openstack tenant=cf username=cfadmin api_key=putyourpasswordhere
 ```
 
@@ -704,9 +705,9 @@ Let's leverage our Vault to create the SSH key pair for BOSH.
 `safe` has a handy builtin for doing this:
 
 ```
-$ safe ssh secret/dc01/proto/shield/keys/core
-$ safe get secret/dc01/proto/shield/keys/core
---- # secret/dc01/proto/shield/keys/core
+$ safe ssh secret/os-dc1/proto/shield/keys/core
+$ safe get secret/os-dc1/proto/shield/keys/core
+--- # secret/os-dc1/proto/shield/keys/core
 fingerprint: 40:9b:11:82:67:41:23:a8:c2:87:98:5d:ec:65:1d:30
 private: |
   -----BEGIN RSA PRIVATE KEY-----
@@ -727,7 +728,7 @@ Now we can put references to our Vaultified keypair in
 $ cat credentials.yml
 ---
 meta:
-  shield_public_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
+  shield_public_key: (( vault "secret/os-dc1/proto/shield/keys/core:public" ))
 ```
 
 You may want to take this opportunity to migrate
@@ -820,8 +821,8 @@ No existing genesis-created bosh-init statefile detected. Please
 help genesis find it.
 Path to existing bosh-init statefile (leave blank for new
 deployments):
-Deployment manifest: '~/ops/bosh-deployments/dc01/proto/manifests/.deploy.yml'
-Deployment state: '~/ops/bosh-deployments/dc01/proto/manifests/.deploy-state.json'
+Deployment manifest: '~/ops/bosh-deployments/os-dc1/proto/manifests/.deploy.yml'
+Deployment state: '~/ops/bosh-deployments/os-dc1/proto/manifests/.deploy-state.json'
 
 Started validating
   Downloading release 'bosh'... Finished (00:00:09)
@@ -850,8 +851,8 @@ newly-deployed Director.  First you're going to need to get the
 password out of our **vault-init**.
 
 ```
-$ safe get secret/dc01/proto/bosh/users/admin
---- # secret/dc01/proto/bosh/users/admin
+$ safe get secret/os-dc1/proto/bosh/users/admin
+--- # secret/os-dc1/proto/bosh/users/admin
 password: super-secret
 ```
 
@@ -859,7 +860,7 @@ Then, run target the director:
 
 ```
 $ bosh target https://10.4.1.4:25555 proto-bosh
-Target set to `dc01-proto-bosh'
+Target set to `os-dc1-proto-bosh'
 Your username: admin
 Enter password:
 Logged in as `admin'
@@ -869,7 +870,7 @@ Config
              ~/.bosh_config
 
 Director
-  Name       dc01-proto-bosh
+  Name       os-dc1-proto-bosh
   URL        https://10.4.1.4:25555
   Version    1.3232.2.0 (00000000)
   User       admin
@@ -911,18 +912,18 @@ monitors each of the child environments that will deployed later by the
 **proto-BOSH** Director.
 
 As before (and as will become almost second-nature soon), let's
-create our `dc01` site using the `openstack` template, and then create
+create our `os-dc1` site using the `openstack` template, and then create
 the `ops` environment inside of that site.
 
 ```
-$ genesis new site --template openstack dc01
-$ genesis new env dc01 proto
+$ genesis new site --template openstack os-dc1
+$ genesis new env os-dc1 proto
 ```
 
 Answer yes twice and then enter a name for your Vault instance when prompted for a FQDN.
 
 ```
-$ cd ~/ops/vault-deployments/dc01/proto
+$ cd ~/ops/vault-deployments/os-dc1/proto
 $ make manifest
 7 error(s) detected:
 - $.meta.openstack.azs.z1: Define the z1 OpenStack availability zone
@@ -959,9 +960,9 @@ $ cat properties.yml
 meta:
   openstack:
     azs:
-      z1: dc01
-      z2: dc01
-      z3: dc01
+      z1: os-dc1
+      z2: os-dc1
+      z3: os-dc1
 
 properties:
   vault:
@@ -1044,7 +1045,7 @@ And then let's give the deploy a whirl:
 
 ```
 $ make deploy
-Acting as user 'admin' on 'dc01-proto-bosh'
+Acting as user 'admin' on 'os-dc1-proto-bosh'
 Checking whether release consul/20 already exists...NO
 Using remote release `https://bosh.io/d/github.com/cloudfoundry-community/consul-boshrelease?v=20'
 
@@ -1065,7 +1066,7 @@ unseal the Vault so that you can interact with it.
 First off, we need to find the IP addresses of our Vault nodes:
 
 ```
-$ bosh vms dc01-proto-vault
+$ bosh vms os-dc1-proto-vault
 +---------------------------------------------------+---------+-----+----------+-----------+
 | VM                                                | State   | AZ  | VM Type  | IPs       |
 +---------------------------------------------------+---------+-----+----------+-----------+
@@ -1188,26 +1189,26 @@ $ safe target init -- export secret | \
   safe target proto -- import
 Now targeting proto at https://10.4.1.16:8200
 Now targeting init at http://127.0.0.1:8200
-wrote secret/dc01/proto/bosh/blobstore/director
-wrote secret/dc01/proto/bosh/db
-wrote secret/dc01/proto/bosh/vcap
-wrote secret/dc01/proto/vault/tls
-wrote secret/dc01
-wrote secret/dc01/proto/bosh/blobstore/agent
-wrote secret/dc01/proto/bosh/registry
-wrote secret/dc01/proto/bosh/users/admin
-wrote secret/dc01/proto/bosh/users/hm
-wrote secret/dc01/proto/shield/keys/core
+wrote secret/os-dc1/proto/bosh/blobstore/director
+wrote secret/os-dc1/proto/bosh/db
+wrote secret/os-dc1/proto/bosh/vcap
+wrote secret/os-dc1/proto/vault/tls
+wrote secret/os-dc1
+wrote secret/os-dc1/proto/bosh/blobstore/agent
+wrote secret/os-dc1/proto/bosh/registry
+wrote secret/os-dc1/proto/bosh/users/admin
+wrote secret/os-dc1/proto/bosh/users/hm
+wrote secret/os-dc1/proto/shield/keys/core
 wrote secret/handshake
-wrote secret/dc01/proto/bosh/nats
+wrote secret/os-dc1/proto/bosh/nats
 
 $ safe target proto -- tree
 Now targeting proto at https://10.4.1.16:8200
 .
 └── secret
     ├── handshake
-    ├── dc01
-    └── dc01/
+    ├── os-dc1
+    └── os-dc1/
         └── proto/
             ├── bosh/
             │   ├── blobstore/
@@ -1270,7 +1271,7 @@ $ openstack ec2 credentials create --user shield-backup --project cf
 | user_id    | 95aaf239306f45759d0adc7f4855c12d |
 +------------+----------------------------------+
 
-$ export VAULT_PREFIX=secret/dc01/proto/shield
+$ export VAULT_PREFIX=secret/os-dc1/proto/shield
 $ safe set ${VAULT_PREFIX}/s3 access_key secret_key
 access_key [hidden]:
 access_key [confirm]:
@@ -1293,13 +1294,13 @@ $ genesis new deployment --template shield
 $ cd shield-deployments
 ```
 
-Now we can set up our `dc01` site using the `openstack` template, with a
+Now we can set up our `os-dc1` site using the `openstack` template, with a
 `proto` environment inside of it:
 
 ```
-$ genesis new site --template openstack dc01
-$ genesis new env dc01 proto
-$ cd dc01/proto
+$ genesis new site --template openstack os-dc1
+$ genesis new env os-dc1 proto
+$ cd os-dc1/proto
 ```
 
 Next, we `make manifest` and see what we need to fill in.
@@ -1318,14 +1319,14 @@ make: *** [manifest] Error 5
 
 By now, this should be old hat.  According to the [Network
 Plan][netplan], the SHIELD deployment belongs in the
-**10.4.1.32/28** network, in dc01.  Let's put that
+**10.4.1.32/28** network, in os-dc1.  Let's put that
 information into `properties.yml`:
 
 ```
 $ cat properties.yml
 ---
 meta:
-  az: dc01
+  az: os-dc1
 ```
 
 As we found with Vault, the `/28` range is actually in it's outer
@@ -1361,7 +1362,7 @@ jobs:
     default: [dns, gateway]
   - name: floating
     static_ips:
-    - 172.26.75.121
+    - 192.168.10.121
 ```
 
 (Don't forget to change your `subnet` to match your OpenStack Network UUID and
@@ -1388,8 +1389,8 @@ properties:
       name: "default"
       plugin: "s3"
       config:
-        access_key_id: (( vault "secret/dc01:access_key" ))
-        secret_access_key: (( vault "secret/dc01:secret_key" ))
+        access_key_id: (( vault "secret/os-dc1:access_key" ))
+        secret_access_key: (( vault "secret/os-dc1:secret_key" ))
         bucket: xxxxxx          # <- backup's s3 bucket
         prefix: "/"
     schedule:
@@ -1401,7 +1402,7 @@ properties:
 Finally, if you recall, we already generated an SSH keypair for
 SHIELD, so that we could pre-deploy the public key to our
 **proto-BOSH**.  We stuck it in the Vault, at
-`secret/dc01/proto/shield/keys/core`, so let's get it back out for this
+`secret/os-dc1/proto/shield/keys/core`, so let's get it back out for this
 deployment:
 
 ```
@@ -1423,7 +1424,7 @@ Time to deploy!
 
 ```
 $ make deploy
-Acting as user 'admin' on 'dc01-proto-bosh'
+Acting as user 'admin' on 'os-dc1-proto-bosh'
 Checking whether release shield/6.3.0 already exists...NO
 Using remote release `https://bosh.io/d/github.com/starkandwayne/shield-boshrelease?v=6.3.0'
 
@@ -1441,9 +1442,9 @@ Backup jobs for SHIELD are created and maintained in the SHIELD UI:
 
 ![SHIELD UI][shield_ui]
 
-To access the SHIELD UI, go to https://172.26.75.121.
+To access the SHIELD UI, go to https://192.168.10.121.
 The user name is `shield` and the password can be accessed in Vault by running
-`safe get secret/dc01/proto/shield/webui:password`. We recommend also storing this
+`safe get secret/os-dc1/proto/shield/webui:password`. We recommend also storing this
 password in a password manager for convenience.
 
 In the SHIELD deployment, we defined a default schedule and retention policy as
@@ -1485,9 +1486,9 @@ as a JSON object, e.g.:
 ```
 {
   "access_key_id": "ACCESS_KEY",
-  "bucket": "172-26-75-154-sslip-io-shield",
+  "bucket": "192-168-10-154-sslip-io-shield",
   "prefix": "/DESIRED_PREFIX",
-  "s3_host": "s3.172.26.75.154.sslip.io",
+  "s3_host": "s3.192.168.10.154.sslip.io",
   "s3_port": "8080",
   "secret_access_key": "SECRET_ACCESS_KEY",
   "signature_version": "2",
@@ -1591,9 +1592,9 @@ things stood up quick and easy, including:
 - `bosh-lite` for deploying and testing locally
 
 ```
-$ genesis new site --template openstack dc01
-Created site dc01 (from template openstack):
-~/ops/bolo-deployments/dc01
+$ genesis new site --template openstack os-dc1
+Created site os-dc1 (from template openstack):
+~/ops/bolo-deployments/os-dc1
 ├── README
 └── site
     ├── disk-pools.yml
@@ -1613,10 +1614,10 @@ Created site dc01 (from template openstack):
 Now, we can create our environment.
 
 ```
-$ cd ~/ops/bolo-deployments/dc01
-$ genesis new env dc01 proto
-Created environment dc01/proto:
-~/ops/bolo-deployments/dc01/proto
+$ cd ~/ops/bolo-deployments/os-dc1
+$ genesis new env os-dc1 proto
+Created environment os-dc1/proto:
+~/ops/bolo-deployments/os-dc1/proto
 ├── Makefile
 ├── README
 ├── cloudfoundry.yml
@@ -1637,7 +1638,7 @@ of environment hooks for setting up credentials.
 Now let's make the manifest.
 
 ```
-$ cd ~/ops/bolo-deployments/dc01/proto
+$ cd ~/ops/bolo-deployments/os-dc1/proto
 $ make manifest
 
 2 error(s) detected:
@@ -1656,13 +1657,13 @@ bolo:
 - Networking configuration
 
 According to the [Network Plan][netplan], the bolo deployment belongs in the
-**10.4.1.64/28** network, in dc01. Let's configure the availability zone in `properties.yml`:
+**10.4.1.64/28** network, in os-dc1. Let's configure the availability zone in `properties.yml`:
 
 ```
 $ cat properties.yml
 ---
 meta:
-  az: dc01
+  az: os-dc1
 ```
 
 Since `10.4.1.64/28` is subdivision of the `10.4.1.0/24` subnet, we can configure networking as follows.
@@ -1698,7 +1699,7 @@ jobs:
   networks:
   - name: floating
     static_ips:
-    - 172.26.75.114
+    - 192.168.10.114
 ```
 
 You can validate your manifest by running `make manifest` and
@@ -1759,7 +1760,7 @@ To add the release:
 ```
 $ cd ~/ops/shield-deployments
 $ genesis add release bolo latest
-$ cd ~/ops/shield-deployments/dc01/proto
+$ cd ~/ops/shield-deployments/os-dc1/proto
 $ genesis use release bolo
 ```
 
@@ -1827,12 +1828,12 @@ From the `~/ops` folder let's generate a new `concourse` deployment, using the `
 $ genesis new deployment --template concourse
 ```
 
-Inside the `global` deployment level goes the site level definition.  For this concourse setup we'll use an `openstack` template for an `dc01` site.
+Inside the `global` deployment level goes the site level definition.  For this concourse setup we'll use an `openstack` template for an `os-dc1` site.
 
 ```
-$ genesis new site --template openstack dc01
-Created site dc01 (from template openstack):
-~/ops/concourse-deployments/dc01
+$ genesis new site --template openstack os-dc1
+Created site os-dc1 (from template openstack):
+~/ops/concourse-deployments/os-dc1
 ├── README
 └── site
     ├── disk-pools.yml
@@ -1853,7 +1854,7 @@ Finally now, because our vault is setup and targeted correctly we can generate o
 
 ```
 $ cd ~/ops/concourse-deployments
-$ genesis new env dc01 proto
+$ genesis new env os-dc1 proto
 Running env setup hook: ~/ops/concourse-deployments/.env_hooks/00_confirm_vault
 
 (*) proto   https://10.4.1.16:8200
@@ -1863,7 +1864,7 @@ Use this Vault for storing deployment credentials?  [yes or no] yes
 Running env setup hook: ~/ops/concourse-deployments/.env_hooks/gen_creds
 Generating credentials for Concourse CI
 Created environment openstack/proto:
-~/ops/concourse-deployments/dc01/proto
+~/ops/concourse-deployments/os-dc1/proto
 ├── cloudfoundry.yml
 ├── credentials.yml
 ├── director.yml
@@ -1880,7 +1881,7 @@ Created environment openstack/proto:
 Let's make the manifest:
 
 ```
-$ cd ~/ops/concourse-deployments/dc01/proto
+$ cd ~/ops/concourse-deployments/os-dc1/proto
 $ make manifest
 5 error(s) detected:
   - $.meta.availability_zone: What availability zone should your concourse VMs be in?
@@ -1894,20 +1895,20 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Again starting with Meta lines in `~/ops/concourse-deployments/dc01/proto`:
+Again starting with Meta lines in `~/ops/concourse-deployments/os-dc1/proto`:
 
 ```
 $ cat properties.yml
 ---
 meta:
-  availability_zone: "dc01"   # Set this to match your first zone
-  external_url: "https://ci.172.26.75.115.sslip.io"  # Set as Floating IP address of the haproxy job
+  availability_zone: "os-dc1"   # Set this to match your first zone
+  external_url: "https://ci.192.168.10.115.sslip.io"  # Set as Floating IP address of the haproxy job
   ssl_pem: ~
-  #  ssl_pem: (( vault meta.vault_prefix "/web_ui:pem" ))
-  shield_authorized_key: (( vault "secret/dc01/proto/shield/keys/core:public" ))
+  #  ssl_pem: (( vault meta.vault_prefix "/certs/haproxy:your_haproxy_domain" ))
+  shield_authorized_key: (( vault "secret/os-dc1/proto/shield/keys/core:public" ))
 ```
 
-The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under the `web_ui:pem` key
+The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under `/certs/haproxy:your_haproxy_domain` as specified in the commented line about `ssl_pem` path above.
 
 For networking, we put this inside `proto` environment level.
 
@@ -1942,14 +1943,14 @@ jobs:
     default: [dns, gateway]
   - name: floating
     static_ips:
-    - 172.26.75.115
+    - 192.168.10.115
 ```
 
 After it is deployed, you can do a quick test by hitting the HAProxy machine
 
 ```
-$ bosh vms dc01-proto-concourse
-Acting as user 'admin' on deployment 'dc01-proto-concourse' on 'dc01-proto-bosh'
+$ bosh vms os-dc1-proto-concourse
+Acting as user 'admin' on deployment 'os-dc1-proto-concourse' on 'os-dc1-proto-bosh'
 
 Director task 43
 
@@ -2067,7 +2068,7 @@ Set the fly target as `concourse`. If we do not use `concourse` as target name, 
 
 `fly -t concourse login -c concourse_url`
 
-You will be prompted for the user and password. The user name is `concourse` and the password is saved in `secret/dc01/proto/concourse/web_ui` in vault.  If you do not specify a team name, the CLI will log you into the default `main` team.
+You will be prompted for the user and password. The user name is `concourse` and the password is saved in `secret/os-dc1/proto/concourse/web_ui` in vault.  If you do not specify a team name, the CLI will log you into the default `main` team.
 
 In this case, we are using Basic Auth.  For details on how to set up oAuth for your team, see [Authentication Management for Teams](#authentication-management-for-teams)
 
@@ -2101,8 +2102,8 @@ We can tackle all the errors by configuring two files: `ci/boshes.yml` and `ci/s
 To generate an SSH key pair, use the following commands to write it to Vault. In the git repo, add the public key to the deploy key.
 
 ```
-safe write secret/dc01/proto/concourse/deployment_keys "private_key_name@private_key_file"
-safe write secret/dc01/proto/concourse/deployment_keys "pub_key_name@pub_key_file"
+safe write secret/os-dc1/proto/concourse/deployment_keys "private_key_name@private_key_file"
+safe write secret/os-dc1/proto/concourse/deployment_keys "pub_key_name@pub_key_file"
 
 ```
 
@@ -2217,9 +2218,9 @@ Next lets create our site and environment:
 
 ```
 $ cd bosh-lite-deployments
-$ genesis new site --template openstack dc01
-Created site dc01 (from template openstack):
-~/ops/bosh-lite-deployments/dc01
+$ genesis new site --template openstack os-dc1
+Created site os-dc1 (from template openstack):
+~/ops/bosh-lite-deployments/os-dc1
 ├── README
 └── site
     ├── disk-pools.yml
@@ -2236,15 +2237,15 @@ Created site dc01 (from template openstack):
 
 2 directories, 11 files
 
-$ genesis new env dc01 alpha
+$ genesis new env os-dc1 alpha
 Running env setup hook: ~/ops/bosh-lite-deployments/.env_hooks/setup
 
 (*) proto	https://10.4.1.16:8200
 
 Use this Vault for storing deployment credentials?  [yes or no]yes
-Setting up credentials in vault, under secret/dc01/alpha/bosh-lite
+Setting up credentials in vault, under secret/os-dc1/alpha/bosh-lite
 .
-└── secret/dc01/alpha/bosh-lite
+└── secret/os-dc1/alpha/bosh-lite
     ├── blobstore/
 
 
@@ -2260,8 +2261,8 @@ Setting up credentials in vault, under secret/dc01/alpha/bosh-lite
 
 
 
-Created environment dc01/alpha:
-~/ops/bosh-lite-deployments/dc01/alpha
+Created environment os-dc1/alpha:
+~/ops/bosh-lite-deployments/os-dc1/alpha
 ├── cloudfoundry.yml
 ├── credentials.yml
 ├── director.yml
@@ -2282,7 +2283,7 @@ Created environment dc01/alpha:
 Now lets try to deploy:
 
 ```
-$ cd dc01/alpha/
+$ cd os-dc1/alpha/
 $ make deploy
   checking https://genesis.starkandwayne.com for details on latest stemcell bosh-openstack-kvm-ubuntu-trusty-go_agent
   checking https://genesis.starkandwayne.com for details on release bosh/260
@@ -2373,7 +2374,7 @@ jobs:
     default: [gateway, dns]
   - name: floating
     static_ips:
-    - 172.26.75.124
+    - 192.168.10.124
 ```
 
 Lastly, we will need to add port-forwarding rules, so that things outside the bosh-lite can talk to its services.
@@ -2385,7 +2386,7 @@ $ cat properties.yml
 meta:
   openstack:
     azs:
-      z1: dc01
+      z1: os-dc1
   port_forwarding_rules:
     - internal_ip:   10.244.0.34
       internal_port: 80
@@ -2409,18 +2410,18 @@ $ make deploy
     checking https://genesis.starkandwayne.com for details on release bosh-warden-cpi/29
   checking https://genesis.starkandwayne.com for details on release garden-linux/0.339.0
     checking https://genesis.starkandwayne.com for details on release port-forwarding/2
-Acting as user 'admin' on 'dc01-proto-bosh'
+Acting as user 'admin' on 'os-dc1-proto-bosh'
 Checking whether release bosh/256.2 already exists...YES
-Acting as user 'admin' on 'dc01-proto-bosh'
+Acting as user 'admin' on 'os-dc1-proto-bosh'
 Checking whether release bosh-warden-cpi/29 already exists...YES
-Acting as user 'admin' on 'dc01-proto-bosh'
+Acting as user 'admin' on 'os-dc1-proto-bosh'
 Checking whether release garden-linux/0.339.0 already exists...YES
-Acting as user 'admin' on 'dc01-proto-bosh'
+Acting as user 'admin' on 'os-dc1-proto-bosh'
 Checking whether release port-forwarding/2 already exists...YES
-Acting as user 'admin' on 'dc01-proto-bosh'
+Acting as user 'admin' on 'os-dc1-proto-bosh'
 Checking if stemcell already exists...
 Yes
-Acting as user 'admin' on deployment 'dc01-alpha-bosh-lite' on 'dc01-proto-bosh'
+Acting as user 'admin' on deployment 'os-dc1-alpha-bosh-lite' on 'os-dc1-proto-bosh'
 Getting deployment properties from director...
 Unable to get properties list from director, trying without it...
 
@@ -2439,20 +2440,20 @@ Started		2017-01-02 19:14:31 UTC
 Finished	2017-01-02 19:17:42 UTC
 Duration	00:03:11
 
-Deployed `dc01-alpha-bosh-lite' to `dc01-proto-bosh'
+Deployed `os-dc1-alpha-bosh-lite' to `os-dc1-proto-bosh'
 ```
 
 Now we can verify the deployment and set up our `bosh` CLI target:
 
 ```
 # grab the admin password for the bosh-lite
-$ safe get secret/dc01/alpha/bosh-lite/users/admin
---- # secret/dc01/alpha/bosh-lite/users/admin
+$ safe get secret/os-dc1/alpha/bosh-lite/users/admin
+--- # secret/os-dc1/alpha/bosh-lite/users/admin
 password: YOUR-PASSWORD-WILL-BE-HERE
 
 
 $ bosh target https://10.4.1.80:25555 alpha
-Target set to `dc01-alpha-bosh-lite'
+Target set to `os-dc1-alpha-bosh-lite'
 Your username: admin
 Enter password:
 Logged in as `admin'
@@ -2461,7 +2462,7 @@ Config
              ~/.bosh_config
 
  Director
-   Name       dc01-alpha-bosh-lite
+   Name       os-dc1-alpha-bosh-lite
      URL        https://10.4.1.80:25555
    Version    1.3232.2.0 (00000000)
      User       admin
@@ -2490,7 +2491,7 @@ $ safe target proto
 (*) proto	https://10.4.1.16:8200
 
 $ bosh target alpha
-Target set to `dc01-alpha-bosh-lite'
+Target set to `os-dc1-alpha-bosh-lite'
 ```
 
 Now we'll create our deployment repo for cloudfoundry:
@@ -2587,7 +2588,7 @@ $ make deploy
   checking https://genesis.starkandwayne.com for details on release cf/237
   checking https://genesis.starkandwayne.com for details on release toolbelt/3.2.10
   checking https://genesis.starkandwayne.com for details on release postgres/1.0.3
-Acting as user 'admin' on 'dc01-try-anything-bosh-lite'
+Acting as user 'admin' on 'os-dc1-try-anything-bosh-lite'
 Checking whether release cf/237 already exists...NO
 Using remote release `https://bosh.io/d/github.com/cloudfoundry/cf-release?v=237'
 
@@ -2607,14 +2608,14 @@ Started		2017-01-02 14:47:45 UTC
 Finished	2017-01-02 14:51:28 UTC
 Duration	00:03:43
 
-Deployed `bosh-lite-alpha-cf' to `dc01-try-anything-bosh-lite'
+Deployed `bosh-lite-alpha-cf' to `os-dc1-try-anything-bosh-lite'
 ```
 
 And once complete, run the smoke tests for good measure:
 
 ```
 $ genesis bosh run errand smoke_tests
-Acting as user 'admin' on deployment 'bosh-lite-alpha-cf' on 'dc01-alpha-bosh-lite'
+Acting as user 'admin' on deployment 'bosh-lite-alpha-cf' on 'os-dc1-alpha-bosh-lite'
 
 Director task 18
   Started preparing deployment > Preparing deployment. Done (00:00:02)
@@ -2657,25 +2658,25 @@ Now that our `alpha` environment has been deployed, we can deploy our first beta
 $ cd ~/ops/bosh-deployments
 $ bosh target proto-bosh
 $ ls
-dc01  bin  global  LICENSE  README.md
+os-dc1  bin  global  LICENSE  README.md
 ```
 
-We already have the `dc01` site created, so now we will just need to create our new environment, and deploy it. Different names (sandbox or staging) for Beta have been used for different customers, here we call it staging.
+We already have the `os-dc1` site created, so now we will just need to create our new environment, and deploy it. Different names (sandbox or staging) for Beta have been used for different customers, here we call it staging.
 
 
 ```
 $ safe target proto
 Now targeting proto at http://10.10.10.6:8200
-$ genesis new env dc01 staging
+$ genesis new env os-dc1 staging
 RSA 1024 bit CA certificates are loaded due to old openssl compatibility
 Running env setup hook: ~/ops/bosh-deployments/.env_hooks/setup
 
  proto	http://10.10.10.6:8200
 
 Use this Vault for storing deployment credentials?  [yes or no] yes
-Setting up credentials in vault, under secret/dc01/staging/bosh
+Setting up credentials in vault, under secret/os-dc1/staging/bosh
 .
-└── secret/dc01/staging/bosh
+└── secret/os-dc1/staging/bosh
     ├── blobstore/
     │   ├── agent
     │   └── director
@@ -2687,8 +2688,8 @@ Setting up credentials in vault, under secret/dc01/staging/bosh
     └── vcap
 
 
-Created environment dc01/staging:
-~/ops/bosh-deployments/dc01/staging
+Created environment os-dc1/staging:
+~/ops/bosh-deployments/os-dc1/staging
 ├── cloudfoundry.yml
 ├── credentials.yml
 ├── director.yml
@@ -2738,8 +2739,8 @@ meta:
     api_key:  (( vault meta.vault_prefix "/openstack:api_key" ))
     tenant:   (( vault meta.vault_prefix "/openstack:tenant" ))
     username: (( vault meta.vault_prefix "/openstack:username" ))
-    auth_url: http://identity.openvdc.lab:5000/v2.0
-    region: openvdc-dc01
+    auth_url: http://identity.mydatacenter.io:5000/v2.0
+    region: os-dc1
 cloud_provider:
   properties:
     openstack:
@@ -2806,7 +2807,7 @@ jobs:
       static_ips: (( static_ips(0) ))
     - name: floating
       static_ips:
-      - 172.26.75.122
+      - 192.168.10.122
 
 cloud_provider:
   properties:
@@ -2829,7 +2830,7 @@ Checking whether release shield/6.2.1 already exists...YES
 Acting as user 'admin' on 'openstack-proto-bosh-microboshen-openstack'
 Checking if stemcell already exists...
 Yes
-Acting as user 'admin' on deployment 'dc01-staging-bosh' on 'openstack-proto-bosh-microboshen-openstack'
+Acting as user 'admin' on deployment 'os-dc1-staging-bosh' on 'openstack-proto-bosh-microboshen-openstack'
 Getting deployment properties from director...
 
 Detecting deployment changes
@@ -2866,7 +2867,7 @@ Started		2017-01-02 17:23:47 UTC
 Finished	2017-01-02 17:34:46 UTC
 Duration	00:10:59
 
-Deployed 'dc01-staging-bosh' to 'dc01-proto-bosh'
+Deployed 'os-dc1-staging-bosh' to 'os-dc1-proto-bosh'
 ```
 
 This will take a little less time than **proto-BOSH** did (some packages were already compiled), and the next time you deploy, it go by much quicker, as all the packages should have been compiled by now (unless upgrading BOSH or the stemcell).
@@ -2874,9 +2875,9 @@ This will take a little less time than **proto-BOSH** did (some packages were al
 Once the deployment finishes, target the new BOSH Director to verify it works:
 
 ```
-$ safe get secret/dc01/staging/bosh/users/admin # grab the admin user's password for bosh
-$ bosh target https://10.4.32.4:25555 dc01-staging
-Target set to 'dc01-staging-bosh'
+$ safe get secret/os-dc1/staging/bosh/users/admin # grab the admin user's password for bosh
+$ bosh target https://10.4.32.4:25555 os-dc1-staging
+Target set to 'os-dc1-staging-bosh'
 Your username: admin
 Enter password:
 Logged in as 'admin'
@@ -2903,12 +2904,12 @@ Also, make sure that you're targeting the right Vault, for good measure:
 $ safe target proto
 ```
 
-We will now create an `dc01` site for CF:
+We will now create an `os-dc1` site for CF:
 
 ```
-$ genesis new site --template openstack dc01
-Created site dc01 (from template openstack):
-~/ops/cf-deployments/dc01
+$ genesis new site --template openstack os-dc1
+Created site os-dc1 (from template openstack):
+~/ops/cf-deployments/os-dc1
 ├── README
 └── site
     ├── disk-pools.yml
@@ -2929,33 +2930,33 @@ Created site dc01 (from template openstack):
 And the `staging` environment inside it:
 
 ```
-$ genesis new env dc01 staging
+$ genesis new env os-dc1 staging
 
 	proto       https://10.4.1.16:8200
 
 	Use this Vault for storing deployment credentials?  [yes or no] yes
 	Generating Cloud Foundry internal certs
 	Uploading Cloud Foundry internal certs to Vault
-	wrote secret/dc01/staging/cf-deployments/certs/internal_ca
-	wrote secret/dc01/staging/cf-deployments/certs/consul_client
-	wrote secret/dc01/staging/cf-deployments/certs/consul_server
-	wrote secret/dc01/staging/cf-deployments/certs/etcd_client
-	wrote secret/dc01/staging/cf-deployments/certs/etcd_server
-	wrote secret/dc01/staging/cf-deployments/certs/etcd_peer
-	wrote secret/dc01/staging/cf-deployments/certs/blobstore
-	wrote secret/dc01/staging/cf-deployments/certs/uaa
-	wrote secret/dc01/staging/cf-deployments/certs/bbs_client
-	wrote secret/dc01/staging/cf-deployments/certs/bbs
-	wrote secret/dc01/staging/cf-deployments/certs/rep_client
-	wrote secret/dc01/staging/cf-deployments/certs/rep
-	wrote secret/dc01/staging/cf-deployments/certs/doppler
-	wrote secret/dc01/staging/cf-deployments/certs/metron
-	wrote secret/dc01/staging/cf-deployments/certs/trafficcontroller
+	wrote secret/os-dc1/staging/cf-deployments/certs/internal_ca
+	wrote secret/os-dc1/staging/cf-deployments/certs/consul_client
+	wrote secret/os-dc1/staging/cf-deployments/certs/consul_server
+	wrote secret/os-dc1/staging/cf-deployments/certs/etcd_client
+	wrote secret/os-dc1/staging/cf-deployments/certs/etcd_server
+	wrote secret/os-dc1/staging/cf-deployments/certs/etcd_peer
+	wrote secret/os-dc1/staging/cf-deployments/certs/blobstore
+	wrote secret/os-dc1/staging/cf-deployments/certs/uaa
+	wrote secret/os-dc1/staging/cf-deployments/certs/bbs_client
+	wrote secret/os-dc1/staging/cf-deployments/certs/bbs
+	wrote secret/os-dc1/staging/cf-deployments/certs/rep_client
+	wrote secret/os-dc1/staging/cf-deployments/certs/rep
+	wrote secret/os-dc1/staging/cf-deployments/certs/doppler
+	wrote secret/os-dc1/staging/cf-deployments/certs/metron
+	wrote secret/os-dc1/staging/cf-deployments/certs/trafficcontroller
 	Creating JWT Signing Key
 	Creating app_ssh host key fingerprint
 	Generating secrets
-	Created environment dc01/staging:
-	~/ops/cf-deployments-deployments/dc01/staging
+	Created environment os-dc1/staging:
+	~/ops/cf-deployments-deployments/os-dc1/staging
 	├── cloudfoundry.yml
 	├── credentials.yml
 	├── director.yml
@@ -2973,7 +2974,7 @@ $ genesis new env dc01 staging
 As you might have guessed, the next step will be to see what parameters we need to fill in:
 
 ```
-$ cd dc01/staging
+$ cd os-dc1/staging
 $ make manifest
 71 error(s) detected:
  - $.meta.azs.z1: What availability zone should the *_z1 vms be placed in?
@@ -3061,27 +3062,27 @@ $ cat properties.yml
 ---
 meta:
   type: cf
-  site: dc01
+  site: os-dc1
   env: dev
   skip_ssl_validation: true
 
   cf:
-    base_domain: 172.26.75.154.sslip.io
-    directory_key_prefix: 172-26-75-154-sslip-io
+    base_domain: 192.168.10.154.sslip.io
+    directory_key_prefix: 192-168-10-154-sslip-io
     blobstore_config:
       fog_connection:
         aws_access_key_id: (( vault "secret/s3:access_key" ))
         aws_secret_access_key: (( vault "secret/s3:secret_key" ))
         scheme: http
         # host: (( get "object." + meta.openstack.domain ))
-        host: 172.26.73.168
+        host: 192.168.8.168
         port: 8080
         # Required
         path_style: true
         # v4 is buggy at the moment, stick with v2 for now
         aws_signature_version: 2
         provider: "AWS"
-        #region: dc01
+        #region: os-dc1
 properties:
   bolo:
     submission:
@@ -3101,9 +3102,9 @@ Also, let's fill out `scaling.yml` so we can more easily scale out our Availabil
 ```
 meta:
   azs:
-    z1: dc01
-    z2: dc01
-    z3: dc01
+    z1: os-dc1
+    z2: os-dc1
+    z3: os-dc1
 jobs:
  - name: access_z1
    instances: 1
@@ -3156,9 +3157,9 @@ $ cat networking.yml
 ---
 meta:
   azs:
-    z1: dc01
-    z2: dc01
-    z3: dc01
+    z1: os-dc1
+    z2: os-dc1
+    z3: os-dc1
   dns: [8.8.8.8, 8.8.4.4]
   router_security_groups: [wide-open]
   security_groups: [wide-open]
@@ -3245,7 +3246,7 @@ jobs:
     default: [dns, gateway]
   - name: floating
     static_ips:
-    - 172.26.75.125
+    - 192.168.10.125
 - name: api_z2
   networks:
   - name: cf2
@@ -3268,7 +3269,7 @@ That should be it, finally. Let's deploy!
 ```
 $ make deploy
 RSA 1024 bit CA certificates are loaded due to old openssl compatibility
-Acting as user 'admin' on 'dc01-staging-bosh'
+Acting as user 'admin' on 'os-dc1-staging-bosh'
 Checking whether release cf/250 already exists...NO
 Using remote release 'https://bosh.io/d/github.com/cloudfoundry/cf-release?v=250'
 
@@ -3284,11 +3285,11 @@ Started		2017-01-02 17:23:47 UTC
 Finished	2017-01-02 17:34:46 UTC
 Duration	00:10:59
 
-Deployed 'dc01-staging-cf' to 'dc01-staging-bosh'
+Deployed 'os-dc1-staging-cf' to 'os-dc1-staging-bosh'
 
 ```
 
-If you want to scale your deployment in the current environment (here it is staging), you can modify `scaling.yml` in your `cf-deployments/dc01/staging` directory. In the following example, you scale runners in both AZ to 2. Afterwards you can run `make manifest` and `make deploy`, but always remember to verify your changes in the manifest before you type `yes`.
+If you want to scale your deployment in the current environment (here it is staging), you can modify `scaling.yml` in your `cf-deployments/os-dc1/staging` directory. In the following example, you scale runners in both AZ to 2. Afterwards you can run `make manifest` and `make deploy`, but always remember to verify your changes in the manifest before you type `yes`.
 
 ```
 jobs:
