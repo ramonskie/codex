@@ -34,7 +34,6 @@ Now we can put references to our Vaultified keypair in
 `credentials.yml`:
 
 ```
-$ cat credentials.yml
 ---
 meta:
   shield_public_key: (( vault "secret/(( insert_parameter site.name ))/proto/shield/keys/core:public" ))

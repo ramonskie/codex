@@ -220,7 +220,6 @@ This is easy enough to supply.  We'll put these properties in
 `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   openstack:
@@ -272,7 +271,6 @@ cat ~/.ssh/bosh.pem | pbcopy
 Then add the following to the `properties.yml` file.
 
 ```
-$ cat properties.yml
 ---
 meta:
 ...
@@ -334,7 +332,6 @@ repository, that would be `10.4.1.0/24`, and we're allocating
 then, should look like this:
 
 ```
-$ cat networking.yml
 ---
 networks:
   - name: default
@@ -411,10 +408,9 @@ networks:
   - **10.4.2.16/28** in zone 2 (b)
   - **10.4.3.16/28** in zone 3 (c)
 
-First, lets do our OpenStack-specific region/zone configuration, along with our Vault HA fully-qualified domain name:
+First, lets do our OpenStack-specific region/zone configuration, along with our Vault HA fully-qualified domain name in `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   openstack:
@@ -435,7 +431,6 @@ simplification.  That leaves us with this for our
 `networking.yml`:
 
 ```
-$ cat networking.yml
 ---
 networks:
   - name: vault_z1
@@ -554,7 +549,6 @@ Plan][netplan], the SHIELD deployment belongs in the
 information into `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   az: (( insert_parameter site.name ))
@@ -565,7 +559,6 @@ As we found with Vault, the `/28` range is actually in it's outer
 convenience.
 
 ```
-$ cat networking.yml
 ---
 networks:
   - name: shield
@@ -634,7 +627,6 @@ According to the [Network Plan][netplan], the bolo deployment belongs in the
 **10.4.1.64/28** network, in (( insert_parameter site.name )). Let's configure the availability zone in `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   az: (( insert_parameter site.name ))
@@ -644,7 +636,6 @@ Since `10.4.1.64/28` is subdivision of the `10.4.1.0/24` subnet, we can configur
 Once again, we add a Floating IP so we can access Gnossis.
 
 ```
-$ cat networking.yml
 ---
 networks:
   - name: bolo
@@ -696,10 +687,9 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Again starting with Meta lines in `~/ops/concourse-deployments/(( insert_parameter site.name ))/proto`:
+Again starting with `meta` lines in `~/ops/concourse-deployments/(( insert_parameter site.name ))/proto`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   availability_zone: "(( insert_parameter site.name ))"   # Set this to match your first zone
@@ -711,10 +701,9 @@ meta:
 
 The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under `/certs/haproxy:your_haproxy_domain` as specified in the commented line about `ssl_pem` path above.
 
-For networking, we put this inside `proto` environment level.
+For networking, we put this inside `proto` environment level (in `networking.yml`):
 
 ```
-$ cat networking.yml
 networks:
   - name: concourse
     subnets:
@@ -780,7 +769,6 @@ networking, so lets fill out our `networking.yml`, after consulting the
 to find our Network UUID:
 
 ```
-$ cat networking.yml
 ---
 networks:
 - name: default
@@ -798,7 +786,6 @@ to reserve the correct static + reserved IPs, so that we don't conflict with oth
 that data can be referenced in the [Global Infrastructure IP Allocation section][infra-ips] of the Network Plan:
 
 ```
-$ cat networking.yml
 ---
 networks:
 - name: default
@@ -852,7 +839,6 @@ Lastly, we will need to add port-forwarding rules, so that things outside the bo
 Since we know we will be deploying Cloud Foundry, let's add rules for it:
 
 ```
-$ cat properties.yml
 ---
 meta:
   openstack:
@@ -981,7 +967,67 @@ EOF
 ```
 
 (( insert_file beta_bosh_deploy.md ))
-(( insert_file beta_jumpbox.md ))
+(( insert_file beta_jumpbox_intro.md )) 
+```
+$ make manifest
+Found stemcell bosh-openstack-kvm-ubuntu-trusty-go_agent 3312.15 on director
+Found release jumpbox 4.2.3 on director
+Found release toolbelt 3.2.10 on director
+Found release shield 6.3.0 on director
+4 error(s) detected:
+ - $.meta.availability_zone: What availability zone should your jumpbox VMs be in?
+ - $.networks.jumpbox.subnets: Specify your jumpbox subnet
+ - $.properties.jumpbox.users: Set up some users to log into this jumpbox
+ - $.properties.shield.agent.autoprovision: What is the URL to this jumpbox's shield installation?
+
+
+Failed to merge templates; bailing...
+Makefile:22: recipe for target 'manifest' failed
+make: *** [manifest] Error 5
+```
+
+For `networking.yml`:
+
+```
+---
+networks:
+  - name: jumpbox
+    subnets:
+      - range: 10.4.16.0/24
+        gateway: 10.4.16.1
+        dns: [8.8.8.8, 8.8.4.4]
+        cloud_properties:
+          net_id: 20c35573-3a0c-4725-95a2-b58550407fcf   # <- Dev-Infra-0 Network UUID
+        reserved:
+          - 10.4.16.2 - 10.4.16.9
+          - 10.4.16.20 - 10.4.16.254
+        static:
+          - 10.4.16.10
+
+  - name: floating
+    type: vip
+    cloud_properties:
+      net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5      # <- Public Network UUID
+      security_groups: [wide-open]
+
+jobs:
+  - name: jumpbox
+    networks:
+    - name: jumpbox
+      default: [dns, gateway]
+    - name: floating
+      static_ips:
+      - 172.26.75.116              # <- Floating IP
+
+cloud_provider:
+  properties:
+    openstack:
+      default_security_groups: [default]
+```
+
+The Floating IP that you generated in Openstack and assign here is what you will later use to SSH into the jumpbox.
+
+(( insert_file beta_jumpbox_deploy.md ))
 (( insert_file beta_cf_intro.md ))
 As you might have guessed, the next step will be to see what parameters we need to fill in:
 
@@ -1278,4 +1324,56 @@ properties:
 ```
 (( insert_file beta_cf_deploy.md ))
 (( insert_file beta_cf_push_app.md ))
+(( insert_file sawmill_intro.md ))
+
+
+```
+$ make manifest
+Found stemcell bosh-openstack-kvm-ubuntu-trusty-go_agent latest on director
+Found release sawmill 2.1.0 on director
+Found release toolbelt latest on director
+8 error(s) detected:
+ - $.meta.openstack.azs.z1: Define the z1 Openstack availability zone
+ - $.networks.sawmill_z1.subnets.0.cloud_properties.net_id: Enter the network ID Openstack for the Dev-Infra-0 network (networks.0<sawmill_z1>.subnets.cloud_properties.net_id))
+ - $.networks.sawmill_z1.subnets.0.gateway: Enter the Gateway for this subnet (networks.0<sawmill_z1>.subnets.gateway)
+ - $.networks.sawmill_z1.subnets.0.range: Enter the CIDR address for this subnet (networks.0<sawmill_z1>.subnets.range)
+ - $.networks.sawmill_z1.subnets.0.reserved: Enter the reserved IP ranges for this subnet (networks.0<sawmill_z1>.subnets.reserved)
+ - $.networks.sawmill_z1.subnets.0.static: Enter the static IP ranges for this subnet (networks.0<sawmill_z1>.subnets.static)
+ - $.properties.sawmill.skip_ssl_verify: Specify whether or not to skip SSL verification (properties.sawmill.skip_ssl_verify)
+ - $.properties.sawmill.users: Specify admin user name & password (properties.sawmill.users.0.{name,pass})
+
+
+Failed to merge templates; bailing...
+Makefile:22: recipe for target 'manifest' failed
+make: *** [manifest] Error 5
+```
+
+`networking.yml`:
+
+```
+---
+meta:
+  openstack:
+    azs:
+      z1: (( insert_parameter site.name ))
+
+networks:
+  - name: sawmill_z1
+    type: manual
+    subnets:
+    - range: 10.4.16.0/24
+      gateway: 10.4.16.1
+      dns: [8.8.8.8, 8.8.4.4]
+      reserved:
+        - 10.4.16.2 - 10.4.16.19
+        - 10.4.16.30 - 10.4.16.254
+      static:
+        - 10.4.16.20
+      cloud_properties:
+        net_id: 20c35573-3a0c-4725-95a2-b58550407fcf   # <- Dev-Infra-0 Network UUID
+        security_groups: [wide-open]
+```
+(( insert_file sawmill_deploy.md ))
+(( insert_file sawmill_alpha.md ))
+(( insert_file sawmill_logemongo.md ))
 (( insert_file next_steps.md ))

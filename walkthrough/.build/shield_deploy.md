@@ -1,7 +1,6 @@
-Then we need to configure our `store` and a default `schedule` and `retention` policy:
+Then we need to configure our `store` and a default `schedule` and `retention` policy in `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 ...
 
@@ -26,10 +25,9 @@ Finally, if you recall, we already generated an SSH keypair for
 SHIELD, so that we could pre-deploy the public key to our
 **proto-BOSH**.  We stuck it in the Vault, at
 `secret/(( insert_parameter site.name ))/proto/shield/keys/core`, so let's get it back out for this
-deployment:
+deployment in `credentials.yml`:
 
 ```
-$ cat credentials.yml
 ---
 properties:
   shield:

@@ -29,8 +29,8 @@ package is available through the power of Concourse pipelines.
 ![Levels of Bosh][levels_of_bosh]
 
 In the above diagram, BOSH (1) is the **proto-BOSH**, while BOSH (2) and BOSH (3)
-are the per-site BOSH Directors.  Note that it is the proto-BOSH ((( insert_paremeter site.name ))-proto-openvdc)
-that deploys Vault, Concourse, Prometheus, SHIELD as well as the other BOSH directors.
+are the per-site BOSH Directors. Note that it is the proto-BOSH (`os-dc1-proto-openvdc`)
+that deploys Vault, Concourse, Bolo, SHIELD as well as the other BOSH directors.
 
 Now it's time to setup the credentials.
 
@@ -347,9 +347,8 @@ example: `os-dc1`.
 ### Environment Name
 
 All of the software the **proto-BOSH** will deploy will be in the `proto` environment.
-And by this point, you've [Setup Credentials][setup_credentials],
-[Used Terraform][use_terraform] to construct the IaaS components and
-[Configured a Bastion Host][bastion_host].  We're ready now to setup a BOSH
+And by this point, you've setup your credentials and used Terraform to construct
+the IaaS components and configure your bastion host.  We're ready now to setup a BOSH
 Director on the bastion.
 
 The first step is to create a **vault-init** process.
@@ -600,7 +599,6 @@ This is easy enough to supply.  We'll put these properties in
 `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   openstack:
@@ -652,7 +650,6 @@ cat ~/.ssh/bosh.pem | pbcopy
 Then add the following to the `properties.yml` file.
 
 ```
-$ cat properties.yml
 ---
 meta:
 ...
@@ -725,7 +722,6 @@ Now we can put references to our Vaultified keypair in
 `credentials.yml`:
 
 ```
-$ cat credentials.yml
 ---
 meta:
   shield_public_key: (( vault "secret/os-dc1/proto/shield/keys/core:public" ))
@@ -758,7 +754,6 @@ repository, that would be `10.4.1.0/24`, and we're allocating
 then, should look like this:
 
 ```
-$ cat networking.yml
 ---
 networks:
   - name: default
@@ -952,10 +947,9 @@ networks:
   - **10.4.2.16/28** in zone 2 (b)
   - **10.4.3.16/28** in zone 3 (c)
 
-First, lets do our OpenStack-specific region/zone configuration, along with our Vault HA fully-qualified domain name:
+First, lets do our OpenStack-specific region/zone configuration, along with our Vault HA fully-qualified domain name in `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   openstack:
@@ -976,7 +970,6 @@ simplification.  That leaves us with this for our
 `networking.yml`:
 
 ```
-$ cat networking.yml
 ---
 networks:
   - name: vault_z1
@@ -1323,7 +1316,6 @@ Plan][netplan], the SHIELD deployment belongs in the
 information into `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   az: os-dc1
@@ -1334,7 +1326,6 @@ As we found with Vault, the `/28` range is actually in it's outer
 convenience.
 
 ```
-$ cat networking.yml
 ---
 networks:
   - name: shield
@@ -1375,10 +1366,9 @@ gave it the Network UUID of the **public** network created near the beginning of
 this walkthrough.  We also associate this floating IP by adding the `floating` network
 directly to the `shield` job, as shown in the above manifest.
 
-Then we need to configure our `store` and a default `schedule` and `retention` policy:
+Then we need to configure our `store` and a default `schedule` and `retention` policy in `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 ...
 
@@ -1403,10 +1393,9 @@ Finally, if you recall, we already generated an SSH keypair for
 SHIELD, so that we could pre-deploy the public key to our
 **proto-BOSH**.  We stuck it in the Vault, at
 `secret/os-dc1/proto/shield/keys/core`, so let's get it back out for this
-deployment:
+deployment in `credentials.yml`:
 
 ```
-$ cat credentials.yml
 ---
 properties:
   shield:
@@ -1660,7 +1649,6 @@ According to the [Network Plan][netplan], the bolo deployment belongs in the
 **10.4.1.64/28** network, in os-dc1. Let's configure the availability zone in `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   az: os-dc1
@@ -1670,7 +1658,6 @@ Since `10.4.1.64/28` is subdivision of the `10.4.1.0/24` subnet, we can configur
 Once again, we add a Floating IP so we can access Gnossis.
 
 ```
-$ cat networking.yml
 ---
 networks:
   - name: bolo
@@ -1895,10 +1882,9 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Again starting with Meta lines in `~/ops/concourse-deployments/os-dc1/proto`:
+Again starting with `meta` lines in `~/ops/concourse-deployments/os-dc1/proto`:
 
 ```
-$ cat properties.yml
 ---
 meta:
   availability_zone: "os-dc1"   # Set this to match your first zone
@@ -1910,10 +1896,9 @@ meta:
 
 The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under `/certs/haproxy:your_haproxy_domain` as specified in the commented line about `ssl_pem` path above.
 
-For networking, we put this inside `proto` environment level.
+For networking, we put this inside `proto` environment level (in `networking.yml`):
 
 ```
-$ cat networking.yml
 networks:
   - name: concourse
     subnets:
@@ -2309,7 +2294,6 @@ networking, so lets fill out our `networking.yml`, after consulting the
 to find our Network UUID:
 
 ```
-$ cat networking.yml
 ---
 networks:
 - name: default
@@ -2327,7 +2311,6 @@ to reserve the correct static + reserved IPs, so that we don't conflict with oth
 that data can be referenced in the [Global Infrastructure IP Allocation section][infra-ips] of the Network Plan:
 
 ```
-$ cat networking.yml
 ---
 networks:
 - name: default
@@ -2381,7 +2364,6 @@ Lastly, we will need to add port-forwarding rules, so that things outside the bo
 Since we know we will be deploying Cloud Foundry, let's add rules for it:
 
 ```
-$ cat properties.yml
 ---
 meta:
   openstack:
@@ -2887,7 +2869,133 @@ Again, since our creds are already in the long-term vault, we can skip the crede
 
 Now it's time to move on to deploying our `beta` (staging) Cloud Foundry!
 
-#### Jumpboxen?
+Next, we will deploy our jumpbox.
+
+#### Beta Jumpbox
+
+Unlike the proto jumpbox, which was initially deployed with Terraform, the beta (dev) jumpbox can be deployed via BOSH:
+
+```
+$ cd ~/ops/cf-deployments
+$ genesis new deployment --template jumpbox
+$ cd jumpbox-deployments
+$ genesis new site --template openstack os-dc1
+$ genesis new env os-dc1 dev
+$ cd os-dc1/dev
+$ make manifest
+```
+
+Similar to our other deployments, we'll start by using the errors from `make manifest` to tell us what values need to be supplied:
+ 
+```
+$ make manifest
+Found stemcell bosh-openstack-kvm-ubuntu-trusty-go_agent 3312.15 on director
+Found release jumpbox 4.2.3 on director
+Found release toolbelt 3.2.10 on director
+Found release shield 6.3.0 on director
+4 error(s) detected:
+ - $.meta.availability_zone: What availability zone should your jumpbox VMs be in?
+ - $.networks.jumpbox.subnets: Specify your jumpbox subnet
+ - $.properties.jumpbox.users: Set up some users to log into this jumpbox
+ - $.properties.shield.agent.autoprovision: What is the URL to this jumpbox's shield installation?
+
+
+Failed to merge templates; bailing...
+Makefile:22: recipe for target 'manifest' failed
+make: *** [manifest] Error 5
+```
+
+For `networking.yml`:
+
+```
+---
+networks:
+  - name: jumpbox
+    subnets:
+      - range: 10.4.16.0/24
+        gateway: 10.4.16.1
+        dns: [8.8.8.8, 8.8.4.4]
+        cloud_properties:
+          net_id: 20c35573-3a0c-4725-95a2-b58550407fcf   # <- Dev-Infra-0 Network UUID
+        reserved:
+          - 10.4.16.2 - 10.4.16.9
+          - 10.4.16.20 - 10.4.16.254
+        static:
+          - 10.4.16.10
+
+  - name: floating
+    type: vip
+    cloud_properties:
+      net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5      # <- Public Network UUID
+      security_groups: [wide-open]
+
+jobs:
+  - name: jumpbox
+    networks:
+    - name: jumpbox
+      default: [dns, gateway]
+    - name: floating
+      static_ips:
+      - 172.26.75.116              # <- Floating IP
+
+cloud_provider:
+  properties:
+    openstack:
+      default_security_groups: [default]
+```
+
+The Floating IP that you generated in Openstack and assign here is what you will later use to SSH into the jumpbox.
+
+`properties.yml`:
+
+```
+---
+meta:
+  availability_zone: os-dc1
+
+properties:
+  shield:
+    agent:
+      autoprovision: https://10.4.1.32    # IP Address for SHIELD VM
+```
+
+The `credentials.yml` file is where you'll add your users:
+
+```
+---
+meta:
+  default_ssh_key: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDjqmzJtynAdxmcODCv0dtYmQrYk3lDeb03fjaQTRMtdEYbKnXk9ji8n3CHZj68JxUwxJRtQU70goP7a9X1PVQHJPIYmSWIdWbpeQdTjxymUh+kFjsu6ydlerLpnY3BjR5uWAxoQb+FRKuQDf9+gmkq95M65Lkef0scAXuVJPjLWhYnbZk6hJ4VlZIec6YKfw2x3+8fRM1sDDSWnazIfDQLudAmGnyeaVQsM5Qp7720imRQYPEl6QhwCgNFWhe42BwV5uXqQbBNVlRsoiu9hmGxjZIKB4f4E6uXfw1CPe0ZZh/34/W6CzN+kUwkWSgWet9+kS2Tf9vg0iqQDj/iFz3Cb/kKet0m7EcbYE51Y3fIC2EZAdlp5rQwDgyDoyz+x0IAPRgfMd9DXXjft/7phFdZp1SM4aBQ/bd5oYDpOTxhFZfHSGe4ZCh6tKX2ASzuP7Z4bhGlwZ50RQZqk5iYLsl+4g3Lt4XnjCz2oHgUHM5XVFiGMr7+PBqnQuWrDYJRcRAXwFZNh1dLRcj2ibYcemLWR31RfkYsEDTm6GbdjmV+XHkuvcqnkv7ZHx1MC2FhEELKLY2/LoU+8At8Fk2YU8JAfk9PROnCsQ8GjABZtEGBywHJxUXIMOFmj+9gJeHkbZsDQe6aas1z90HUKfK3u5AU5kC0e62RMjrtwb99eRK2+Q==
+
+properties:
+  jumpbox:
+    users:
+    - name: juser
+      shell: /bin/bash
+      setup_script: /var/vcap/packages/ruby-gems/bin/installer
+      ssh_keys:
+      - (( grab meta.default_ssh_key ))
+```
+
+Here we have the public key for `bosh` as the default SSH key. You could optionally add it to Vault like so:
+
+```
+$ safe set secret/os-dc1/dev/jumpbox/ssh/default pubkey@/full/path/to/bosh.pub
+```
+
+This creates the entry `secret/os-dc1/dev/jumpbox/ssh/default` with `pubkey` set to the contents of the file. You can view the secret with `safe get secret/os-dc1/dev/jumpbox/ssh/default:pubkey`.
+
+You can then modify your `credentials.yml` as follows:
+
+```
+---
+properties:
+  jumpbox:
+    users:
+    - name: juser
+      shell: /bin/bash
+      setup_script: /var/vcap/packages/ruby-gems/bin/installer
+      ssh_keys:
+      - (( vault meta.vault_prefix "/ssh/default:pubkey" ))
 
 #### Beta Cloud Foundry
 
@@ -3339,6 +3447,185 @@ Server error, status code: 500, error code: 10001, message: An unknown error occ
 
 ```
 You can try to debug this yourself for a while or find the possible solution in [Debug Unknown Error When You Push Your APP to CF][DebugUnknownError].
+
+## Logging with Sawmill
+
+Sawmill is a BOSH release that aggregates logs to assist with troubleshooting Cloud Foundry and its services that support [nxlog][nxlog]. Although Sawmill logs can be viewed using `curl`, we recommend installing `logemongo` - a CLI tool for Sawmill. If you need to store your logs for later access, we recommend using a storage bucket (e.g. S3).
+
+Since we only have Cloud Foundries in Alpha (BOSH Lite) and Dev, we'll only be deploying Sawmill to those two environments here.
+
+### How to deploy
+
+To create the deployment:
+
+```
+$ genesis new deployment --template sawmill
+$ cd sawmill-deployments
+```
+
+For the Beta (Dev) Environment:
+
+
+```
+$ genesis new site --template openstack os-dc1
+$ genesis new env os-dc1 dev
+$ cd os-dc1/dev
+$ make manifest
+```
+
+As before, we'll need to supply the information requested in the errors:
+
+
+
+```
+$ make manifest
+Found stemcell bosh-openstack-kvm-ubuntu-trusty-go_agent latest on director
+Found release sawmill 2.1.0 on director
+Found release toolbelt latest on director
+8 error(s) detected:
+ - $.meta.openstack.azs.z1: Define the z1 Openstack availability zone
+ - $.networks.sawmill_z1.subnets.0.cloud_properties.net_id: Enter the network ID Openstack for the Dev-Infra-0 network (networks.0<sawmill_z1>.subnets.cloud_properties.net_id))
+ - $.networks.sawmill_z1.subnets.0.gateway: Enter the Gateway for this subnet (networks.0<sawmill_z1>.subnets.gateway)
+ - $.networks.sawmill_z1.subnets.0.range: Enter the CIDR address for this subnet (networks.0<sawmill_z1>.subnets.range)
+ - $.networks.sawmill_z1.subnets.0.reserved: Enter the reserved IP ranges for this subnet (networks.0<sawmill_z1>.subnets.reserved)
+ - $.networks.sawmill_z1.subnets.0.static: Enter the static IP ranges for this subnet (networks.0<sawmill_z1>.subnets.static)
+ - $.properties.sawmill.skip_ssl_verify: Specify whether or not to skip SSL verification (properties.sawmill.skip_ssl_verify)
+ - $.properties.sawmill.users: Specify admin user name & password (properties.sawmill.users.0.{name,pass})
+
+
+Failed to merge templates; bailing...
+Makefile:22: recipe for target 'manifest' failed
+make: *** [manifest] Error 5
+```
+
+`networking.yml`:
+
+```
+---
+meta:
+  openstack:
+    azs:
+      z1: os-dc1
+
+networks:
+  - name: sawmill_z1
+    type: manual
+    subnets:
+    - range: 10.4.16.0/24
+      gateway: 10.4.16.1
+      dns: [8.8.8.8, 8.8.4.4]
+      reserved:
+        - 10.4.16.2 - 10.4.16.19
+        - 10.4.16.30 - 10.4.16.254
+      static:
+        - 10.4.16.20
+      cloud_properties:
+        net_id: 20c35573-3a0c-4725-95a2-b58550407fcf   # <- Dev-Infra-0 Network UUID
+        security_groups: [wide-open]
+```
+`credentials.yml`:
+
+```
+---
+properties:
+  sawmill:
+    users:
+      - name: admin
+        pass: (( vault meta.vault_prefix "/users/admin:password" ))
+```
+
+`properties.yml`:
+
+```
+---
+properties:
+  sawmill:
+    skip_ssl_verify: true
+```
+
+You will need to add the user to Vault and assign a password. The easiest way to do this is:
+
+```
+safe gen secret/os-dc1/dev/sawmill/users/admin password
+
+```
+
+You can view the sawmill credentials tree in Vault with `safe`:
+
+```
+safe tree secret/os-dc1/dev/sawmill
+```
+
+You can view the password with `safe get secret/os-dc1/dev/sawmill/users/admin:password`. Now you can make the manifest and deploy:
+
+```
+$ make manifest deploy
+```
+
+For the **Alpha** (BOSH Lite) Environment:
+
+Repeat the above process for both alpha (BOSH Lite) and dev. Since BOSH Lite is it's own site, and not in `os-dc1`, make sure to use the `bosh-lite` template for that deployment e.g. assuming you're in the `sawmill-deployments` directory:
+
+```
+$ genesis new site --template bosh-lite bosh-lite
+$ genesis new env bosh-lite alpha
+$ cd bosh-lite/alpha
+$ make manifest
+```
+
+In this case both `credentials.yml` and `properties.yml` will match the Dev deployment, so we only need to add `networking.yml`:
+
+```
+---
+networks:
+  - name: sawmill_z1
+    type: manual
+    subnets:
+    - range: 10.244.8.0/24
+      gateway: 10.244.8.1
+      dns: [8.8.8.8, 8.8.4.4]
+      reserved:
+        - 10.244.8.2 - 10.244.8.19
+        - 10.244.8.30 - 10.244.8.254
+      static:
+        - 10.244.8.20
+```
+
+And create the `user:password` in Vault:
+
+```
+safe gen secret/bosh-lite/alpha/sawmill/users/admin password
+```
+
+Now you can make the manifest and deploy:
+
+```
+$ make manifest deploy
+```
+
+### Viewing Logs with Logemongo
+
+First, log into a jumpbox that can access the private network of the environment where you want to view logs (e.g. the dev jumpbox for the dev environment). Then, grab `[logemongo](logemongo)` from Github:
+
+```
+sudo curl -o /usr/local/bin/logemongo \
+  https://raw.githubusercontent.com/starkandwayne/logemongo/master/logemongo
+sudo chmod 0755 /usr/local/bin/logemongo
+```
+
+Since our jumpboxes use Ubuntu, we'll need to grab a couple packages for the utility:
+
+```
+sudo apt-get install libio-socket-ssl-perl libconfig-yaml-perl
+```
+
+You can view the streaming logs from the appropriate Sawmill using the host flag and passing through the username and password. Since we're using self-signed certificates, we'll also need to disable SSL verification. e.g. to stream logs in dev:
+
+```
+$ logemongo -H 10.4.16.20 -u admin -p $(safe get secret/os-dc1/dev/sawmill/users/admin:password) --no-ssl
+```
+
+Depending on log volume, it may take a few moments for logs to begin to appear. If you wish to stream logs only from a certain source, or exclude logs only from a certain source, you can use `-i` and `-x` respectively with a regex pattern. You can also limit the number of lines of output with `-c`.
 
 ### Production Environment
 
