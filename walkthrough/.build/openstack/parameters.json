@@ -1,7 +1,8 @@
 {
 	"service": {
 		"short_name": "OpenStack",
-		"long_name": "OpenStack"
+		"long_name": "OpenStack",
+		"public_ip_type": "Floating IP"
 	},
 	"template_name": "openstack",
 	"cpi_name": "openstack",
@@ -21,13 +22,24 @@
 		"bosh_dns_ips": "10.4.1.77, 10.4.1.78",
 		"shield_fip": "192.168.10.121",
 		"bolo_fip": "192.168.10.114",
-		"external_concourse_url": "https://ci.192.168.10.115.sslip.io",
-		"concourse_fip": "192.168.10.115",
 		"boshlite_fip": "192.168.10.124",
 		"public_net_prefix": "192.168.10"
 	},
+	"concourse": {
+		"url": "https://ci.192.168.10.115.sslip.io",
+		"public_ip": "192.168.10.115"
+	},
+	"cf_alpha": {
+		"public_ip": "192.168.10.124",
+		"base_domain": "192.168.10.124.sslip.io"
+	},
 	"cf_beta": {
+		"public_ip": "192.168.10.154",
 		"base_domain": "192.168.10.154.sslip.io",
 		"directory_key_prefix": "192-168-10-154-sslip-io"
+	},
+	"s3_blobstore": {
+		"address": "192.168.8.168",
+		"port": "8080"
 	}
 }

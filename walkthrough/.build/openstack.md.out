@@ -1882,7 +1882,7 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Again starting with `meta` lines in `~/ops/concourse-deployments/os-dc1/proto`:
+Again starting with `meta` lines in `~/ops/concourse-deployments/os-dc1/proto/properties.yml`:
 
 ```
 ---
@@ -1894,7 +1894,7 @@ meta:
   shield_authorized_key: (( vault "secret/os-dc1/proto/shield/keys/core:public" ))
 ```
 
-The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under `/certs/haproxy:your_haproxy_domain` as specified in the commented line about `ssl_pem` path above.
+The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under the `web_ui:pem` key
 
 For networking, we put this inside `proto` environment level (in `networking.yml`):
 
@@ -1994,6 +1994,36 @@ genesis ci beta  site/env
 genesis ci manual(or auto) site/env
 ```
 Then simply run `genesis ci check` to see if everything is setup correctly and use `genesis ci flow` to review that if the pipeline flows are correct.
+
+For the pipelines, you may recall in the beginning of the document that the proto-BOSH
+is responsible for deploying SHIELD, Vault, etc. as well as the other BOSHes. The
+other BOSHes are used to test deployment upgrades for each environment until reaching
+the final environment. In the current configuration upgrades are initially deployed
+to BOSH Lite (`os-dc1-alpha-bosh-lite`) and then once they are passing are automatically
+deployed to the staging (`os-dc1-staging-bosh`) environment:
+
+![cbts-pipelines][pipelines]
+
+Currently the pipelines are production-ready, meaning they only need the director
+information if/when a production environment is added. Typically, we recommend
+making production deployments manual to prevent unintended and unscheduled changes
+to production.
+
+For a manual deployment, simply click on `os-dc1-prod` and then the `+` in the upper
+right corner:
+
+![manual-deploy][manual_deploy]
+
+By the necessity of its design, the BOSH pipeline differs from the other pipelines.
+It will deploy to `os-dc1-alpha-bosh-lite` first and once that passes it will use `os-dc1-proto-openvdc`
+to deploy `os-dc1-staging-bosh`:
+
+![bosh-pipeline][bosh_pipeline]
+
+Both `os-dc1-alpha-bosh-lite` and `os-dc1-proto-openvdc` will need to be manually
+updated using either `make manifest deploy` or `make refresh manifest deploy` (`make refresh`
+will update the deployment with site and/or global changes that have been added).
+
 
 ### Set Up Vault
 
@@ -2103,6 +2133,12 @@ aliases:
     bosh_uuid: bosh_director_url
     bosh_uuid: bosh_director_url
     bosh_uuid: bosh_director_url
+
+# if you are setting up pipeline for BOSH, you also need to configure BOSH deployment names and URLs
+    bosh_deployment_name: bosh_director_url
+    bosh_deployment_name: bosh_director_url
+    bosh_deployment_name: bosh_director_url
+
 auth:
   https://x.x.x.x:25555:
     username: admin
@@ -2134,6 +2170,9 @@ meta:
     webhook: (( vault "your path to webhook url" ))
     channel: '#your_channel name'
 
+ # If you are setting up pipeline for BOSH, you need to configure pause_for_existing_bosh_tasks as true
+  pause_for_existing_bosh_tasks: true
+
 ```
 After `genesis ci repipe` succeeds, follow the instructions it prints out to unpause your pipeline.
 
@@ -2151,15 +2190,13 @@ Your pipeline configuration is now updated.
 
 ### How to Use Concourse UI
 
-Visit http://x.x.x.x.sslip.io in your browser, where `x.x.x.x` is the IP of the haproxy VM. You will see "\*no pipelines configured" in the middle of your screen. Click the login button on the top right, choose the main team to login. The username and password is the same with what you used when you run `fly -t concourse login -c concourse_url`. (If needed, you can retrieve the password from vault with `safe get secret/SITE/proto/concourse/web_ui:password`.) After you login, you will see the pipelines listed on the left you already configured as the main team. You can click the pipeline name to look at the specific jobs in rectangle boxes of that pipeline.
+Visit [https://ci.192.168.10.115.sslip.io](https://ci.192.168.10.115.sslip.io) in your browser, and you will see a "no pipelines configured" message in the middle of your screen. Click the **login** button on the top right, choose the main team to login. The username and password is the same with what you used when you run `fly -t concourse login -c concourse_url`. (If needed, you can retrieve the password from vault with `safe get secret/os-dc1/proto/concourse/web_ui:password`.) After you login, you will see the pipelines listed on the left you already configured as the main team. You can click the pipeline name to look at the specific jobs in rectangle boxes of that pipeline.
 
 Click each rectangle, you can see the builds, tasks and other details about the corresponding job. To trigger a job manually, you can click the plus button on the right corner for that job. We recommend that the jobs which deploy to the production environment should be manually triggered, and all other jobs can be triggered automatically when the changes are pushed to the git repository.
 
 ### Authentication Management for Teams
 
-To be continued: How to manage authentication for teams. For the main team, how we use Github oAuth instead of Basic Auth.
-
-[fly]: https://concourse.ci/fly-cli.html
+For the main team, we use Github oAuth instead of Basic Auth. It is also possible to set up authentication for additional teams. For more information, please refer to the [Concourse Authentication docs](https://concourse.ci/authentication.html).
 
 ## Building out Sites and Environments
 
@@ -2293,6 +2330,8 @@ networking, so lets fill out our `networking.yml`, after consulting the
 [Network Plan][netplan] to find our global infrastructure network and Horizon
 to find our Network UUID:
 
+`networking.yml`
+
 ```
 ---
 networks:
@@ -2309,6 +2348,8 @@ networks:
 Since there are a bunch of other deployments on the infrastructure network, we should take care
 to reserve the correct static + reserved IPs, so that we don't conflict with other deployments. Fortunately
 that data can be referenced in the [Global Infrastructure IP Allocation section][infra-ips] of the Network Plan:
+
+`networking.yml`
 
 ```
 ---
@@ -2363,6 +2404,7 @@ jobs:
 Lastly, we will need to add port-forwarding rules, so that things outside the bosh-lite can talk to its services.
 Since we know we will be deploying Cloud Foundry, let's add rules for it:
 
+`properties.yml`
 ```
 ---
 meta:
@@ -2553,7 +2595,10 @@ Unlike all the other deployments so far, we won't use `make manifest` to vet the
 
 ```
 cd bosh-lite/alpha
-$ cat properties.yml
+```
+In `properties.yml`:
+
+```
 ---
 meta:
   cf:
@@ -2564,15 +2609,12 @@ Now we can deploy:
 
 ```
 $ make deploy
-  checking https://genesis.starkandwayne.com for details on release cf/237
-  checking https://genesis.starkandwayne.com for details on release toolbelt/3.2.10
-  checking https://genesis.starkandwayne.com for details on release postgres/1.0.3
-  checking https://genesis.starkandwayne.com for details on release cf/237
-  checking https://genesis.starkandwayne.com for details on release toolbelt/3.2.10
+  checking https://genesis.starkandwayne.com for details on release cf/250
+  checking https://genesis.starkandwayne.com for details on release toolbelt/3.3.0
   checking https://genesis.starkandwayne.com for details on release postgres/1.0.3
 Acting as user 'admin' on 'os-dc1-try-anything-bosh-lite'
-Checking whether release cf/237 already exists...NO
-Using remote release `https://bosh.io/d/github.com/cloudfoundry/cf-release?v=237'
+Checking whether release cf/250 already exists...NO
+Using remote release `https://bosh.io/d/github.com/cloudfoundry/cf-release?v=250'
 
 Director task 1
   Started downloading remote release > Downloading remote release
@@ -2630,6 +2672,57 @@ Errand 'smoke_tests' completed successfully (exit code 0)
 ```
 
 We now have our alpha-environment's Cloud Foundry stood up!
+
+#### Alpha haproxy
+
+
+Haproxy primarily provides SSL termination for Cloud Foundry. It is also configured to provide SSL termination for S3 since the current Openstack environment doesn't have an SSL endpoint for S3, which is needed for SHIELD. This will not be needed for environments that have SSL endpoints for S3, e.g. production.
+
+Since haproxy has a cert and credentials that need to go in Vault, make sure you are targeting the desired Vault:
+
+```
+$ safe target proto
+```
+Once that is taken care of, you will create the new deployment with its site and environment:
+
+```
+$ genesis new deployment --template haproxy
+$ cd haproxy-deployments
+$ genesis new site --template bosh-lite bosh-lite
+$ genesis new env bosh-lite alpha
+$ cd bosh-lite/alpha
+$ make manifest
+Found stemcell bosh-warden-boshlite-ubuntu-trusty-go_agent 3312.15 on director
+Found release haproxy latest on director
+release toolbelt track is set to track from the index
+  checking https://genesis.starkandwayne.com for details on latest release toolbelt
+2 error(s) detected:
+ - $.properties.ha_proxy.backend_servers: Specify your go routers IPs as backend servers
+ - $.properties.ha_proxy.tcp.cf_app_ssh.backend_servers: Specify you  CF Access VMs IPs as your backend servers
+
+
+Failed to merge templates; bailing...
+Makefile:22: recipe for target 'manifest' failed
+make: *** [manifest] Error 5
+```
+
+As before, we'll resolve the errors by adding in the requested information, this time in the `properties.yml` file:
+
+```
+---
+properties:
+  ha_proxy:
+    backend_servers: [ 10.244.0.22 ]       # Alpha Cloud Foundry router_z1 IP
+    ssl_pem:
+      - (( vault meta.vault_prefix "/certs/pems:*.192.168.10.124.sslip.io" ))
+
+    tcp:
+      - name: cf_app_ssh
+        backend_servers: [ 10.244.0.109 ]  # Alpha Cloud Foundry access_z1 IP
+```
+
+You'll notice that we also added another field, `ssl_pem`. This stores the SSL cert that will be used by haproxy. In beta environments if you are using an `sslip.io` domain you will need to supply a floating IP to generate the cert, but since this is BOSH Lite we will simply supply the static IP assigned to the haproxy instance. To generate the cert, run the `haproxy_cert_gen` script in the `bin` directory:
+
 
 ### First Beta Environment
 
@@ -2761,7 +2854,6 @@ make: *** [deploy] Error 3
 All that remains is filling in our networking details, so lets go consult our [Network Plan](https://github.com/starkandwayne/codex/blob/master/network.md). We will place the BOSH Director in the staging site's infrastructure network, in the first AZ we have defined (subnet name `staging-infra-0`, CIDR `10.4.32.0/24`). To do that, we'll need to update `networking.yml`:
 
 ```
-$ cat > networking.yml <<EOF
 ---
 networks:
   - name: default
@@ -2886,7 +2978,7 @@ $ make manifest
 ```
 
 Similar to our other deployments, we'll start by using the errors from `make manifest` to tell us what values need to be supplied:
- 
+
 ```
 $ make manifest
 Found stemcell bosh-openstack-kvm-ubuntu-trusty-go_agent 3312.15 on director
@@ -3261,7 +3353,6 @@ jobs:
 Time to start building out the `networking.yml` file. Let's consult our [Network Plan][netplan] for the subnet information, cross referencing with Terraform output to get the subnet IDs:
 
 ```
-$ cat networking.yml
 ---
 meta:
   azs:
@@ -3448,6 +3539,125 @@ Server error, status code: 500, error code: 10001, message: An unknown error occ
 ```
 You can try to debug this yourself for a while or find the possible solution in [Debug Unknown Error When You Push Your APP to CF][DebugUnknownError].
 
+#### Beta haproxy
+For the haproxy/(-ies) in beta environments you'll need to create a Floating IP for each environment. For this deployment, we'll be using `192.168.10.154` as the Floating IP.
+
+Once you have the Floating IP, create the new environment:
+```
+$ cd ~/ops/haproxy-deployments
+$ genesis new site --template openstack dc01
+$ genesis new dc01 dev 
+$ cd dc01/dev
+$ make manifest
+```
+
+```
+...
+8 error(s) detected:
+ - $.meta.azs.z1: What availability zone should the *_z1 vms be placed in?
+ - $.meta.azs.z2: What availability zone should the *_z2 vms be placed in?
+ - $.meta.azs.z3: What availability zone should the *_z3 vms be placed in?
+ - $.networks.haproxy1.subnets: Please specify haproxy1 subnets
+ - $.networks.haproxy2.subnets: Please specify haproxy1 subnets
+ - $.properties.ha_proxy.backend_servers: Specify your go routers IPs as backend servers
+ - $.properties.ha_proxy.ssl_pem: Configure the ssl pem you use for your haproxy
+ - $.properties.ha_proxy.tcp.cf_app_ssh.backend_servers: Specify you  CF Access VMs IPs as your backend servers
+```
+
+Now add the network information to `networking.yml`:
+
+```
+--
+meta:
+  azs:
+    z1: dc01
+    z2: (( grab meta.azs.z1 ))
+    z3: (( grab meta.azs.z1 ))
+  dns: [8.8.8.8, 8.8.4.4]
+  router_security_groups: [wide-open]
+  security_groups: [wide-open]
+
+networks:
+- name: haproxy1
+  type: manual
+  subnets:
+  - range: 10.4.19.0/25
+    reserved:
+    - 10.4.19.2 - 10.4.19.8
+    static: [ 10.4.19.9 - 10.4.19.12 ]
+    gateway: 10.4.19.1
+    cloud_properties:
+      net_id: 262fb235-de6c-4979-832a-225c66859d26    # Network UUID for dev-cf-edge-0
+      security_groups: [ wide-open ]
+
+- name: haproxy2
+  type: manual
+  subnets:
+  - range: 10.4.19.128/25
+    reserved:
+    - 10.4.19.129 - 10.4.19.135
+    static: [ 10.4.19.136 - 10.4.19.140 ]
+    gateway: 10.4.19.129
+    cloud_properties:
+      net_id: 41fb3f7d-9198-49e2-84b9-d142628a666a    # Network UUID for dev-cf-edge-1
+      security_groups: [ wide-open ]
+
+- name: floating
+  type: vip
+  cloud_properties:
+    net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5      # Network UUID for public
+    security_groups: [wide-open]
+
+jobs:
+  - name: haproxy_z1
+    networks:
+    - name: haproxy1
+      default: [dns, gateway]
+    - name: floating
+      static_ips:
+      - 192.168.10.154                                 # Floating IP for haproxy
+```
+And also the `properties.yml`:
+
+```
+---
+properties:
+  ha_proxy:
+    ssl_pem:
+      - (( vault meta.vault_prefix "/certs/pems:192.168.10.154.sslip.io" ))
+    backend_servers: [ 10.4.19.4, 10.4.19.132 ]  # Dev Cloud Foundry router_z* IPs
+
+    tcp:
+      - name: cf_app_ssh
+        backend_servers: [ 10.4.20.108 ]         # Dev Cloud Foundry access_z1 IP
+```
+
+As before, we'll need to generate the haproxy cert. In this case, we have a true Floating IP so we will be using that IP to generate the cert:
+
+```
+$ ENV_PATH=secret/dc01/dev FIP=192.168.10.154 ./bin/haproxy_cert_gen
+```
+
+As a reminder if you are using a domain with its own CA, you will generate the cert with your own internal process and upload it to Vault using `safe write`. For example, if you had a cert for `example.com` for this environment and saved it as `haproxy.pem`, you would use:
+
+```
+$ safe write secret/dc01/dev/haproxy/certs/pems example.com@haproxy.pem
+```
+
+You would then reference the secret in the manifest with `(( vault meta.vault_prefix "/certs/pems:example.com" ))`.
+
+After configuring all the templates, and generating the certificate, make the manifest and deploy with `make manifest deploy`.
+
+There is one final step: since Cloud Foundry was already deployed so we could use it's CA, you'll need to edit `properties.yml` haproxy Floating IP for the base domain and directory key prefix:
+
+```
+  cf:
+    base_domain: 192.168.10.154.sslip.io
+    directory_key_prefix: 192-168-10-154-sslip-io
+```
+
+Once this is done remake the manifest and deploy the Beta (dev) Cloud Foundry with `make manifest deploy`. You will also need to delete the original `run` and `system` domains by listing the domains with `cf domains` and then using `cf delete-shared-domain` and `cf delete-domain`. Alternatively, if the Cloud Foundry has yet to have any apps/etc. added to it you may want to delete the deployment with `bosh delete deployment dc01-dev-cf-cloudfoundry` and then deploy normally.
+
 ## Logging with Sawmill
 
 Sawmill is a BOSH release that aggregates logs to assist with troubleshooting Cloud Foundry and its services that support [nxlog][nxlog]. Although Sawmill logs can be viewed using `curl`, we recommend installing `logemongo` - a CLI tool for Sawmill. If you need to store your logs for later access, we recommend using a storage bucket (e.g. S3).
@@ -3497,8 +3707,6 @@ Failed to merge templates; bailing...
 Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
-
-`networking.yml`:
 
 ```
 ---

@@ -90,7 +90,10 @@ Unlike all the other deployments so far, we won't use `make manifest` to vet the
 
 ```
 cd bosh-lite/alpha
-$ cat properties.yml
+```
+In `properties.yml`:
+
+```
 ---
 meta:
   cf:
@@ -101,15 +104,13 @@ Now we can deploy:
 
 ```
 $ make deploy
-  checking https://genesis.starkandwayne.com for details on release cf/237
-  checking https://genesis.starkandwayne.com for details on release toolbelt/3.2.10
+  checking https://genesis.starkandwayne.com for details on release cf/250
+  checking https://genesis.starkandwayne.com for details on release toolbelt/3.3.0
   checking https://genesis.starkandwayne.com for details on release postgres/1.0.3
-  checking https://genesis.starkandwayne.com for details on release cf/237
-  checking https://genesis.starkandwayne.com for details on release toolbelt/3.2.10
-  checking https://genesis.starkandwayne.com for details on release postgres/1.0.3
+  ...
 Acting as user 'admin' on '(( insert_parameter site.name ))-try-anything-bosh-lite'
-Checking whether release cf/237 already exists...NO
-Using remote release `https://bosh.io/d/github.com/cloudfoundry/cf-release?v=237'
+Checking whether release cf/250 already exists...NO
+Using remote release `https://bosh.io/d/github.com/cloudfoundry/cf-release?v=250'
 
 Director task 1
   Started downloading remote release > Downloading remote release

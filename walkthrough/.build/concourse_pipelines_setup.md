@@ -13,6 +13,36 @@ genesis ci manual(or auto) site/env
 ```
 Then simply run `genesis ci check` to see if everything is setup correctly and use `genesis ci flow` to review that if the pipeline flows are correct.
 
+For the pipelines, you may recall in the beginning of the document that the proto-BOSH
+is responsible for deploying SHIELD, Vault, etc. as well as the other BOSHes. The
+other BOSHes are used to test deployment upgrades for each environment until reaching
+the final environment. In the current configuration upgrades are initially deployed
+to BOSH Lite (`(( insert_parameter site.name ))-alpha-bosh-lite`) and then once they are passing are automatically
+deployed to the staging (`(( insert_parameter site.name ))-staging-bosh`) environment:
+
+![cbts-pipelines][pipelines]
+
+Currently the pipelines are production-ready, meaning they only need the director
+information if/when a production environment is added. Typically, we recommend
+making production deployments manual to prevent unintended and unscheduled changes
+to production.
+
+For a manual deployment, simply click on `(( insert_parameter site.name ))-prod` and then the `+` in the upper
+right corner:
+
+![manual-deploy][manual_deploy]
+
+By the necessity of its design, the BOSH pipeline differs from the other pipelines.
+It will deploy to `(( insert_parameter site.name ))-alpha-bosh-lite` first and once that passes it will use `(( insert_parameter site.name ))-proto-openvdc`
+to deploy `(( insert_parameter site.name ))-staging-bosh`:
+
+![bosh-pipeline][bosh_pipeline]
+
+Both `(( insert_parameter site.name ))-alpha-bosh-lite` and `(( insert_parameter site.name ))-proto-openvdc` will need to be manually
+updated using either `make manifest deploy` or `make refresh manifest deploy` (`make refresh`
+will update the deployment with site and/or global changes that have been added).
+
+
 ### Set Up Vault
 
 #### Create read-only policies
@@ -121,6 +151,12 @@ aliases:
     bosh_uuid: bosh_director_url
     bosh_uuid: bosh_director_url
     bosh_uuid: bosh_director_url
+
+# if you are setting up pipeline for BOSH, you also need to configure BOSH deployment names and URLs
+    bosh_deployment_name: bosh_director_url
+    bosh_deployment_name: bosh_director_url
+    bosh_deployment_name: bosh_director_url
+
 auth:
   https://x.x.x.x:25555:
     username: admin
@@ -152,6 +188,9 @@ meta:
     webhook: (( vault "your path to webhook url" ))
     channel: '#your_channel name'
 
+ # If you are setting up pipeline for BOSH, you need to configure pause_for_existing_bosh_tasks as true
+  pause_for_existing_bosh_tasks: true
+
 ```
 After `genesis ci repipe` succeeds, follow the instructions it prints out to unpause your pipeline.
 
@@ -169,12 +208,10 @@ Your pipeline configuration is now updated.
 
 ### How to Use Concourse UI
 
-Visit http://x.x.x.x.sslip.io in your browser, where `x.x.x.x` is the IP of the haproxy VM. You will see "\*no pipelines configured" in the middle of your screen. Click the login button on the top right, choose the main team to login. The username and password is the same with what you used when you run `fly -t concourse login -c concourse_url`. (If needed, you can retrieve the password from vault with `safe get secret/SITE/proto/concourse/web_ui:password`.) After you login, you will see the pipelines listed on the left you already configured as the main team. You can click the pipeline name to look at the specific jobs in rectangle boxes of that pipeline.
+Visit [(( insert_parameter concourse.url ))]((( insert_parameter concourse.url ))) in your browser, and you will see a "no pipelines configured" message in the middle of your screen. Click the **login** button on the top right, choose the main team to login. The username and password is the same with what you used when you run `fly -t concourse login -c concourse_url`. (If needed, you can retrieve the password from vault with `safe get secret/(( insert_parameter site.name ))/proto/concourse/web_ui:password`.) After you login, you will see the pipelines listed on the left you already configured as the main team. You can click the pipeline name to look at the specific jobs in rectangle boxes of that pipeline.
 
 Click each rectangle, you can see the builds, tasks and other details about the corresponding job. To trigger a job manually, you can click the plus button on the right corner for that job. We recommend that the jobs which deploy to the production environment should be manually triggered, and all other jobs can be triggered automatically when the changes are pushed to the git repository.
 
 ### Authentication Management for Teams
 
-To be continued: How to manage authentication for teams. For the main team, how we use Github oAuth instead of Basic Auth.
-
-[fly]: https://concourse.ci/fly-cli.html
+For the main team, we use Github oAuth instead of Basic Auth. It is also possible to set up authentication for additional teams. For more information, please refer to the [Concourse Authentication docs](https://concourse.ci/authentication.html).

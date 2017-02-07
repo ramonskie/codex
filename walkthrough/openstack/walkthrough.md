@@ -687,19 +687,19 @@ Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
 
-Again starting with `meta` lines in `~/ops/concourse-deployments/(( insert_parameter site.name ))/proto`:
+Again starting with `meta` lines in `~/ops/concourse-deployments/(( insert_parameter site.name ))/proto/properties.yml`:
 
 ```
 ---
 meta:
   availability_zone: "(( insert_parameter site.name ))"   # Set this to match your first zone
-  external_url: "(( insert_parameter openstack.external_concourse_url ))"  # Set as Floating IP address of the haproxy job
+  external_url: "(( insert_parameter concourse.url ))"  # Set as Floating IP address of the haproxy job
   ssl_pem: ~
   #  ssl_pem: (( vault meta.vault_prefix "/certs/haproxy:your_haproxy_domain" ))
   shield_authorized_key: (( vault "secret/(( insert_parameter site.name ))/proto/shield/keys/core:public" ))
 ```
 
-The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under `/certs/haproxy:your_haproxy_domain` as specified in the commented line about `ssl_pem` path above.
+The `~` means we won't use SSL certs for now.  If you have proper certs or want to use self signed you can add them to vault under the `web_ui:pem` key
 
 For networking, we put this inside `proto` environment level (in `networking.yml`):
 
@@ -733,7 +733,7 @@ jobs:
     default: [dns, gateway]
   - name: floating
     static_ips:
-    - (( insert_parameter openstack.concourse_fip ))
+    - (( insert_parameter concourse.public_ip ))
 ```
 
 (( insert_file concourse_test.md ))
@@ -768,6 +768,8 @@ networking, so lets fill out our `networking.yml`, after consulting the
 [Network Plan][netplan] to find our global infrastructure network and Horizon
 to find our Network UUID:
 
+`networking.yml`
+
 ```
 ---
 networks:
@@ -784,6 +786,8 @@ networks:
 Since there are a bunch of other deployments on the infrastructure network, we should take care
 to reserve the correct static + reserved IPs, so that we don't conflict with other deployments. Fortunately
 that data can be referenced in the [Global Infrastructure IP Allocation section][infra-ips] of the Network Plan:
+
+`networking.yml`
 
 ```
 ---
@@ -838,6 +842,7 @@ jobs:
 Lastly, we will need to add port-forwarding rules, so that things outside the bosh-lite can talk to its services.
 Since we know we will be deploying Cloud Foundry, let's add rules for it:
 
+`properties.yml`
 ```
 ---
 meta:
@@ -856,6 +861,7 @@ meta:
 (( insert_file alpha_boshlite_deploy.md ))
 (( insert_file alpha_boshlite_target.md ))
 (( insert_file alpha_cf.md ))
+(( insert_file alpha_haproxy.md ))
 (( insert_file beta_bosh_intro.md ))
 Let's try to deploy now, and see what information still needs to be resolved:
 
@@ -929,7 +935,6 @@ make: *** [deploy] Error 3
 All that remains is filling in our networking details, so lets go consult our [Network Plan](https://github.com/starkandwayne/codex/blob/master/network.md). We will place the BOSH Director in the staging site's infrastructure network, in the first AZ we have defined (subnet name `staging-infra-0`, CIDR `10.4.32.0/24`). To do that, we'll need to update `networking.yml`:
 
 ```
-$ cat > networking.yml <<EOF
 ---
 networks:
   - name: default
@@ -967,7 +972,7 @@ EOF
 ```
 
 (( insert_file beta_bosh_deploy.md ))
-(( insert_file beta_jumpbox_intro.md )) 
+(( insert_file beta_jumpbox_intro.md ))
 ```
 $ make manifest
 Found stemcell bosh-openstack-kvm-ubuntu-trusty-go_agent 3312.15 on director
@@ -1211,7 +1216,6 @@ jobs:
 Time to start building out the `networking.yml` file. Let's consult our [Network Plan][netplan] for the subnet information, cross referencing with Terraform output to get the subnet IDs:
 
 ```
-$ cat networking.yml
 ---
 meta:
   azs:
@@ -1324,6 +1328,74 @@ properties:
 ```
 (( insert_file beta_cf_deploy.md ))
 (( insert_file beta_cf_push_app.md ))
+(( insert_file beta_haproxy_intro.md ))
+```
+...
+8 error(s) detected:
+ - $.meta.azs.z1: What availability zone should the *_z1 vms be placed in?
+ - $.meta.azs.z2: What availability zone should the *_z2 vms be placed in?
+ - $.meta.azs.z3: What availability zone should the *_z3 vms be placed in?
+ - $.networks.haproxy1.subnets: Please specify haproxy1 subnets
+ - $.networks.haproxy2.subnets: Please specify haproxy1 subnets
+ - $.properties.ha_proxy.backend_servers: Specify your go routers IPs as backend servers
+ - $.properties.ha_proxy.ssl_pem: Configure the ssl pem you use for your haproxy
+ - $.properties.ha_proxy.tcp.cf_app_ssh.backend_servers: Specify you  CF Access VMs IPs as your backend servers
+```
+
+Now add the network information to `networking.yml`:
+
+```
+--
+meta:
+  azs:
+    z1: dc01
+    z2: (( grab meta.azs.z1 ))
+    z3: (( grab meta.azs.z1 ))
+  dns: [8.8.8.8, 8.8.4.4]
+  router_security_groups: [wide-open]
+  security_groups: [wide-open]
+
+networks:
+- name: haproxy1
+  type: manual
+  subnets:
+  - range: 10.4.19.0/25
+    reserved:
+    - 10.4.19.2 - 10.4.19.8
+    static: [ 10.4.19.9 - 10.4.19.12 ]
+    gateway: 10.4.19.1
+    cloud_properties:
+      net_id: 262fb235-de6c-4979-832a-225c66859d26    # Network UUID for dev-cf-edge-0
+      security_groups: [ wide-open ]
+
+- name: haproxy2
+  type: manual
+  subnets:
+  - range: 10.4.19.128/25
+    reserved:
+    - 10.4.19.129 - 10.4.19.135
+    static: [ 10.4.19.136 - 10.4.19.140 ]
+    gateway: 10.4.19.129
+    cloud_properties:
+      net_id: 41fb3f7d-9198-49e2-84b9-d142628a666a    # Network UUID for dev-cf-edge-1
+      security_groups: [ wide-open ]
+
+- name: floating
+  type: vip
+  cloud_properties:
+    net_id: 09b03d93-45f8-4bea-b3b8-7ad9169f23d5      # Network UUID for public
+    security_groups: [wide-open]
+
+jobs:
+  - name: haproxy_z1
+    networks:
+    - name: haproxy1
+      default: [dns, gateway]
+    - name: floating
+      static_ips:
+      - (( insert_parameter cf_beta.public_ip ))                                 # Floating IP for haproxy
+```
+(( insert_file beta_haproxy_deploy.md ))
 (( insert_file sawmill_intro.md ))
 
 
@@ -1347,8 +1419,6 @@ Failed to merge templates; bailing...
 Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
-
-`networking.yml`:
 
 ```
 ---
