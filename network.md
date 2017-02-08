@@ -63,7 +63,7 @@ networks (i.e. cf-edge-0, cf-edge-1, cf-0, cf-1, etc.).
 |         |              | 10.4.18.0/24   |  254 |     3 | dev-infra-2          | Site Infrastructure    |
 |         |              | 10.4.19.0/25   |  126 |     1 | dev-cf-edge-0        | Cloud Foundry Routers  |
 |         |              | 10.4.19.128/25 |  126 |     2 | dev-cf-edge-1        | Cloud Foundry Routers  |
-|         |              | 10.4.20.0/24   |  254 |     1 | dev-cf-core-2        | Cloud Foundry Core     |
+|         |              | 10.4.20.0/24   |  254 |     1 | dev-cf-core-0        | Cloud Foundry Core     |
 |         |              | 10.4.21.0/24   |  254 |     2 | dev-cf-core-1        | Cloud Foundry Core     |
 |         |              | 10.4.22.0/24   |  254 |     3 | dev-cf-core-2        | Cloud Foundry Core     |
 |         |              | 10.4.23.0/24   |  254 |     1 | dev-cf-runtime-0     | Cloud Foundry Runtime  |

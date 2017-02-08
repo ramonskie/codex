@@ -146,6 +146,8 @@ Finally, configure the files we mentioned earlier:
 boshes.yml
 
 # The UUIDs and director URL's of all bosh directors in your pipeline go here.
+# Since we are using proto-bosh to deploy bosh-lite, dev-bosh and prod-bosh, using bosh-lite to deploy a regular bosh for pipeline alpha environment purpose, when you setup pipeline for BOSH, you will need configure for all the BOSHes which are involved.
+
 aliases:
   target:
     bosh_uuid: bosh_director_url
