@@ -38,6 +38,6 @@ Lather, rinse, repeat for all additional environments (e.g. loadtest, production
 [bastion_6]:              images/bastion_step_6.png "Concourse"
 [global_network_diagram]: images/global_network_diagram.png "Global Network Diagram"
 [shield_ui]:              images/shield_ui.png "SHIELD UI"
-[pipelines]:              images/cbts-pipelines.png "cbts-pipelines"
+[pipelines]:              images/pipelines.png "pipelines"
 [manual_deploy]:          images/manual-deployment.png "manual-deploy"
 [bosh_pipeline]:          images/bosh-pipeline.png "bosh-pipeline"

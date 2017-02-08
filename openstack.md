@@ -2002,7 +2002,7 @@ the final environment. In the current configuration upgrades are initially deplo
 to BOSH Lite (`dc01-alpha-bosh-lite`) and then once they are passing are automatically
 deployed to the staging (`dc01-staging-bosh`) environment:
 
-![cbts-pipelines][pipelines]
+![pipelines][pipelines]
 
 Currently the pipelines are production-ready, meaning they only need the director
 information if/when a production environment is added. Typically, we recommend
@@ -3904,7 +3904,7 @@ Lather, rinse, repeat for all additional environments (e.g. loadtest, production
 [bastion_6]:              images/bastion_step_6.png "Concourse"
 [global_network_diagram]: images/global_network_diagram.png "Global Network Diagram"
 [shield_ui]:              images/shield_ui.png "SHIELD UI"
-[pipelines]:              images/cbts-pipelines.png "cbts-pipelines"
+[pipelines]:              images/pipelines.png "pipelines"
 [manual_deploy]:          images/manual-deployment.png "manual-deploy"
 [bosh_pipeline]:          images/bosh-pipeline.png "bosh-pipeline"
 

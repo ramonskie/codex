@@ -20,7 +20,7 @@ the final environment. In the current configuration upgrades are initially deplo
 to BOSH Lite (`(( insert_parameter site.name ))-alpha-bosh-lite`) and then once they are passing are automatically
 deployed to the staging (`(( insert_parameter site.name ))-staging-bosh`) environment:
 
-![cbts-pipelines][pipelines]
+![pipelines][pipelines]
 
 Currently the pipelines are production-ready, meaning they only need the director
 information if/when a production environment is added. Typically, we recommend
