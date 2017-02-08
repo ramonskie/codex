@@ -7,7 +7,7 @@
 	"template_name": "openstack",
 	"cpi_name": "openstack",
 	"site": {
-		"name": "os-dc1",
+		"name": "dc01",
 		"description": "OpenStack Datacenter"
 	},
 	"stemcell": {
