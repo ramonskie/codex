@@ -48,3 +48,8 @@ properties:
       setup_script: /var/vcap/packages/ruby-gems/bin/installer
       ssh_keys:
       - (( vault meta.vault_prefix "/ssh/default:pubkey" ))
+```
+
+Now that all of the errors are resolved, you can deploy with `make manifest deploy`. When you need to add additional users, simply update the `credentials.yml` file to mimic the above, whichever route you have chosen for storing / not storing the public key in Vault.
+
+Note: although you need to also create an alpha (BOSH Lite) jumpbox for `genesis ci` / Concourse for the purposes of updating stemcells and releases, you only need the proto jumpbox and dev jumpboxes to access all of your environments. The proto jumpbox is intended to access the proto BOSH and BOSH Lite directors and the beta (dev) jumpbox is intended to access the dev BOSH director.

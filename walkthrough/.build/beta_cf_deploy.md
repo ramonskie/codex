@@ -35,9 +35,14 @@ jobs:
   instances: 2
 
 ```
+To make the manifest and deploy the changes run `make manifest deploy`. Always make sure to verify the detected changes match what you intended in the manifest before entering `yes` to kickoff the deploy.
 
-After a long while of compiling and deploying VMs, your CF should now be up, and accessible! You can
-check the sanity of the deployment via `genesis bosh run errand smoke_tests`. Target it using
-`cf login -a https://api.system.<your CF domain>`. The admin user's password can be retrieved
-from Vault. If you run into any trouble, make sure that your DNS is pointing properly to the
-correct ELB for this environment, and that the ELB has the correct SSL certificate for your site.
+After a long while of compiling and deploying VMs, your Cloud Foundry should now be up, and accessible! You can check the sanity by running the smoke tests with `genesis bosh run errand smoke_tests`. 
+
+To target your Cloud Foundry to start making orgs, spaces, and pushing apps use:
+
+```
+cf login -a https://api.system.(( insert_parameter cf_beta.base_domain ))
+```
+
+The admin user's password can be retrieved from Vault with `safe get secret/dc01/dev/cf-cloudfoundry/creds/users/admin:password`. If you run into any trouble, make sure that your DNS is pointing properly to the correct Load Balancer for this environment and that the Load Balancer has the correct SSL certificate for your site.

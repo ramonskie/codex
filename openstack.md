@@ -2723,7 +2723,15 @@ properties:
 ```
 
 You'll notice that we also added another field, `ssl_pem`. This stores the SSL cert that will be used by haproxy. In beta environments if you are using an `sslip.io` domain you will need to supply a floating IP to generate the cert, but since this is BOSH Lite we will simply supply the static IP assigned to the haproxy instance. To generate the cert, run the `haproxy_cert_gen` script in the `bin` directory:
+```
+$ ENV_PATH=secret/bosh-lite/alpha FIP=192.168.10.124 ./bin/haproxy_cert_gen
+```
 
+The script uses Cloud Foundry's CA, so the `ENV_PATH` supplied is the `vault_prefix` given in `name.yml` without the actual deployment name.
+
+If you are not using an `sslip.io` domain and are using a domain with its own CA, you will not need to run this script. Rather you would use your own internal process to generate the certs and then add them to Vault with `safe write`.
+
+Once this is done all the errors are resolved and you can run `make manifest deploy` to deploy haproxy.
 
 ### First Beta Environment
 
@@ -2808,7 +2816,8 @@ make: *** [manifest] Error 5
 Looks like we need to provide the same type of data as we did for **proto-BOSH**. Lets fill in the basic properties:
 
 ```
-$ cat > properties.yml <<EOF
+`properties.yml`
+
 ---
 meta:
   openstack:
@@ -2853,6 +2862,8 @@ make: *** [deploy] Error 3
 ```
 
 All that remains is filling in our networking details, so lets go consult our [Network Plan](https://github.com/starkandwayne/codex/blob/master/network.md). We will place the BOSH Director in the staging site's infrastructure network, in the first AZ we have defined (subnet name `staging-infra-0`, CIDR `10.4.32.0/24`). To do that, we'll need to update `networking.yml`:
+
+`networking.yml`:
 
 ```
 ---
@@ -2959,8 +2970,6 @@ Logged in as 'admin'
 ```
 
 Again, since our creds are already in the long-term vault, we can skip the credential migration that was done in the proto-bosh deployment and go straight to committing our new deployment to the repo, and pushing it upstream.
-
-Now it's time to move on to deploying our `beta` (staging) Cloud Foundry!
 
 Next, we will deploy our jumpbox.
 
@@ -3089,6 +3098,13 @@ properties:
       setup_script: /var/vcap/packages/ruby-gems/bin/installer
       ssh_keys:
       - (( vault meta.vault_prefix "/ssh/default:pubkey" ))
+```
+
+Now that all of the errors are resolved, you can deploy with `make manifest deploy`. When you need to add additional users, simply update the `credentials.yml` file to mimic the above, whichever route you have chosen for storing / not storing the public key in Vault.
+
+Note: although you need to also create an alpha (BOSH Lite) jumpbox for `genesis ci` / Concourse for the purposes of updating stemcells and releases, you only need the proto jumpbox and dev jumpboxes to access all of your environments. The proto jumpbox is intended to access the proto BOSH and BOSH Lite directors and the beta (dev) jumpbox is intended to access the dev BOSH director.
+
+Now it's time to move on to deploying our `beta` (staging) Cloud Foundry!
 
 #### Beta Cloud Foundry
 
@@ -3258,8 +3274,9 @@ make: *** [manifest] Error 5
 
 Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those (no need to create the blobstore S3 buckets yourself):
 
+`properties.yml`
+
 ```
-$ cat properties.yml
 ---
 meta:
   type: cf
@@ -3501,12 +3518,17 @@ jobs:
   instances: 2
 
 ```
+To make the manifest and deploy the changes run `make manifest deploy`. Always make sure to verify the detected changes match what you intended in the manifest before entering `yes` to kickoff the deploy.
 
-After a long while of compiling and deploying VMs, your CF should now be up, and accessible! You can
-check the sanity of the deployment via `genesis bosh run errand smoke_tests`. Target it using
-`cf login -a https://api.system.<your CF domain>`. The admin user's password can be retrieved
-from Vault. If you run into any trouble, make sure that your DNS is pointing properly to the
-correct ELB for this environment, and that the ELB has the correct SSL certificate for your site.
+After a long while of compiling and deploying VMs, your Cloud Foundry should now be up, and accessible! You can check the sanity by running the smoke tests with `genesis bosh run errand smoke_tests`. 
+
+To target your Cloud Foundry to start making orgs, spaces, and pushing apps use:
+
+```
+cf login -a https://api.system.192.168.10.154.sslip.io
+```
+
+The admin user's password can be retrieved from Vault with `safe get secret/dc01/dev/cf-cloudfoundry/creds/users/admin:password`. If you run into any trouble, make sure that your DNS is pointing properly to the correct Load Balancer for this environment and that the Load Balancer has the correct SSL certificate for your site.
 
 ##### Push An App to Beta Cloud Foundry
 
@@ -3659,6 +3681,10 @@ There is one final step: since Cloud Foundry was already deployed so we could us
 
 Once this is done remake the manifest and deploy the Beta (dev) Cloud Foundry with `make manifest deploy`. You will also need to delete the original `run` and `system` domains by listing the domains with `cf domains` and then using `cf delete-shared-domain` and `cf delete-domain`. Alternatively, if the Cloud Foundry has yet to have any apps/etc. added to it you may want to delete the deployment with `bosh delete deployment dc01-dev-cf-cloudfoundry` and then deploy normally.
 
+### Production Environment
+
+Deploying the production environment will be much like deploying the `beta` environment above. You will need to deploy a BOSH Director, Cloud Foundry, and any services also deployed in the `beta` site. Hostnames, credentials, network information, and possibly scaling parameters will all be different, but the procedure for deploying them is the same.
+
 ## Logging with Sawmill
 
 Sawmill is a BOSH release that aggregates logs to assist with troubleshooting Cloud Foundry and its services that support [nxlog][nxlog]. Although Sawmill logs can be viewed using `curl`, we recommend installing `logemongo` - a CLI tool for Sawmill. If you need to store your logs for later access, we recommend using a storage bucket (e.g. S3).
@@ -3708,6 +3734,8 @@ Failed to merge templates; bailing...
 Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
+
+`networking.yml`:
 
 ```
 ---
@@ -3836,33 +3864,33 @@ $ logemongo -H 10.4.16.20 -u admin -p $(safe get secret/os-dc1/dev/sawmill/users
 
 Depending on log volume, it may take a few moments for logs to begin to appear. If you wish to stream logs only from a certain source, or exclude logs only from a certain source, you can use `-i` and `-x` respectively with a regex pattern. You can also limit the number of lines of output with `-c`.
 
-### Production Environment
-
-Deploying the production environment will be much like deploying the `beta` environment above. You will need to deploy a BOSH Director, Cloud Foundry, and any services also deployed in the `beta` site. Hostnames, credentials, network information, and possibly scaling parameters will all be different, but the procedure for deploying them is the same.
-
 ### Next Steps
 
-Lather, rinse, repeat for all additional environments (dev, prod, loadtest, whatever's applicable to the client).
+Lather, rinse, repeat for all additional environments (e.g. loadtest, production).
 
 [//]: # (Links, please keep in alphabetical order)
 
 [bolo]:              https://github.com/cloudfoundry-community/bolo-boshrelease
+[cf-env]:            https://github.com/cloudfoundry-community/cf-env
 [cfconsul]:          https://docs.cloudfoundry.org/concepts/architecture/#bbs-consul
 [cfetcd]:            https://docs.cloudfoundry.org/concepts/architecture/#etcd
+[DebugUnknownError]: http://www.starkandwayne.com/blog/debug-unknown-error-when-you-push-your-app-to-cf/
 [DRY]:               https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
+[fly]:               https://concourse.ci/fly-cli.html
 [genesis]:           https://github.com/starkandwayne/genesis
+[infra-ips]:         https://github.com/starkandwayne/codex/blob/master/part3/network.md#global-infrastructure-ip-allocation
 [jumpbox]:           https://github.com/starkandwayne/jumpbox
+[logemongo]:         https://github.com/starkandwayne/logemongo
 [netplan]:           https://github.com/starkandwayne/codex/blob/master/network.md
 [ngrok-download]:    https://ngrok.com/download
 [infra-ips]:         https://github.com/starkandwayne/codex/blob/master/part3/network.md#global-infrastructure-ip-allocation
+[nxlog]:             https://github.com/hybris/nxlog-boshrelease
+[orgs and spaces]:   https://docs.cloudfoundry.org/concepts/roles.html
 [shield]:            https://github.com/starkandwayne/shield
-[spruce-129]:        https://github.com/geofffranks/spruce/issues/129
 [slither]:           http://slither.io
+[spruce-129]:        https://github.com/geofffranks/spruce/issues/129
 [troubleshooting]:   troubleshooting.md
 [verify_ssh]:        https://github.com/starkandwayne/codex/blob/master/troubleshooting.md#verify-keypair
-[cf-env]:            https://github.com/cloudfoundry-community/cf-env
-[orgs and spaces]:   https://docs.cloudfoundry.org/concepts/roles.html
-[DebugUnknownError]: http://www.starkandwayne.com/blog/debug-unknown-error-when-you-push-your-app-to-cf/
 
 [//]: # (Images, put in /images folder)
 
@@ -3876,4 +3904,7 @@ Lather, rinse, repeat for all additional environments (dev, prod, loadtest, what
 [bastion_6]:              images/bastion_step_6.png "Concourse"
 [global_network_diagram]: images/global_network_diagram.png "Global Network Diagram"
 [shield_ui]:              images/shield_ui.png "SHIELD UI"
+[pipelines]:              images/cbts-pipelines.png "cbts-pipelines"
+[manual_deploy]:          images/manual-deployment.png "manual-deploy"
+[bosh_pipeline]:          images/bosh-pipeline.png "bosh-pipeline"
 

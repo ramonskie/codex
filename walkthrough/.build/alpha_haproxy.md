@@ -47,4 +47,12 @@ properties:
 ```
 
 You'll notice that we also added another field, `ssl_pem`. This stores the SSL cert that will be used by haproxy. In beta environments if you are using an `sslip.io` domain you will need to supply a floating IP to generate the cert, but since this is BOSH Lite we will simply supply the static IP assigned to the haproxy instance. To generate the cert, run the `haproxy_cert_gen` script in the `bin` directory:
+```
+$ ENV_PATH=secret/bosh-lite/alpha FIP=(( insert_parameter cf_alpha.public_ip )) ./bin/haproxy_cert_gen
+```
 
+The script uses Cloud Foundry's CA, so the `ENV_PATH` supplied is the `vault_prefix` given in `name.yml` without the actual deployment name.
+
+If you are not using an `sslip.io` domain and are using a domain with its own CA, you will not need to run this script. Rather you would use your own internal process to generate the certs and then add them to Vault with `safe write`.
+
+Once this is done all the errors are resolved and you can run `make manifest deploy` to deploy haproxy.

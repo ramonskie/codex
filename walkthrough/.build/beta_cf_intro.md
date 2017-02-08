@@ -1,3 +1,5 @@
+Now it's time to move on to deploying our `beta` (staging) Cloud Foundry!
+
 #### Beta Cloud Foundry
 
 To deploy Cloud Foundry, we will go back into our `ops` directory, making use of

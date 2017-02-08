@@ -888,7 +888,8 @@ make: *** [manifest] Error 5
 Looks like we need to provide the same type of data as we did for **proto-BOSH**. Lets fill in the basic properties:
 
 ```
-$ cat > properties.yml <<EOF
+`properties.yml`
+
 ---
 meta:
   openstack:
@@ -933,6 +934,8 @@ make: *** [deploy] Error 3
 ```
 
 All that remains is filling in our networking details, so lets go consult our [Network Plan](https://github.com/starkandwayne/codex/blob/master/network.md). We will place the BOSH Director in the staging site's infrastructure network, in the first AZ we have defined (subnet name `staging-infra-0`, CIDR `10.4.32.0/24`). To do that, we'll need to update `networking.yml`:
+
+`networking.yml`:
 
 ```
 ---
@@ -1120,8 +1123,9 @@ make: *** [manifest] Error 5
 
 Oh boy. That's a lot. Cloud Foundry must be complicated. Looks like a lot of the fog_connection properties are all duplicates though, so lets fill out `properties.yml` with those (no need to create the blobstore S3 buckets yourself):
 
+`properties.yml`
+
 ```
-$ cat properties.yml
 ---
 meta:
   type: cf
@@ -1396,6 +1400,7 @@ jobs:
       - (( insert_parameter cf_beta.public_ip ))                                 # Floating IP for haproxy
 ```
 (( insert_file beta_haproxy_deploy.md ))
+(( insert_file prod.md ))
 (( insert_file sawmill_intro.md ))
 
 
@@ -1419,6 +1424,8 @@ Failed to merge templates; bailing...
 Makefile:22: recipe for target 'manifest' failed
 make: *** [manifest] Error 5
 ```
+
+`networking.yml`:
 
 ```
 ---

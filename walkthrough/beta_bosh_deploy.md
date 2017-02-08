@@ -66,5 +66,3 @@ Logged in as 'admin'
 ```
 
 Again, since our creds are already in the long-term vault, we can skip the credential migration that was done in the proto-bosh deployment and go straight to committing our new deployment to the repo, and pushing it upstream.
-
-Now it's time to move on to deploying our `beta` (staging) Cloud Foundry!
