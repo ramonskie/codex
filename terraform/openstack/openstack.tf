@@ -113,20 +113,20 @@ resource "openstack_networking_secgroup_rule_v2" "wide-open_ingress-IPv6" {
   security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
 }
 
-resource "openstack_networking_secgroup_rule_v2" "wide-open_egress" {
-  direction = "egress"
-  ethertype = "IPv4"
-  region = "${var.region}"
-  remote_ip_prefix = "0.0.0.0/0"
-  security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
-}
+#resource "openstack_networking_secgroup_rule_v2" "wide-open_egress" {
+#  direction = "egress"
+#  ethertype = "IPv4"
+#  region = "${var.region}"
+#  remote_ip_prefix = "0.0.0.0/0"
+#  security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
+#}
 
-resource "openstack_networking_secgroup_rule_v2" "wide-open_egress-IPv6" {
-  direction = "egress"
-  ethertype = "IPv6"
-  region = "${var.region}"
-  security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
-}
+#resource "openstack_networking_secgroup_rule_v2" "wide-open_egress-IPv6" {
+#  direction = "egress"
+#  ethertype = "IPv6"
+#  region = "${var.region}"
+#  security_group_id = "${openstack_networking_secgroup_v2.wide-open.id}"
+#}
 
 resource "openstack_networking_secgroup_v2" "cf-db" {
   name = "cf-db"
@@ -183,6 +183,10 @@ output "openstack_networking_network_v2.dmz.dmz-subnet.subnet" {
 resource "openstack_networking_port_v2" "dmz-port" {
   name = "dmz-port"
   network_id = "${openstack_networking_network_v2.dmz.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.dmz-subnet.id}",
+    ip_address = "${var.network}.0.3"
+  }]
 }
 
 ######### Global ############
@@ -202,6 +206,10 @@ resource "openstack_networking_subnet_v2" "global-infra-0-subnet" {
 resource "openstack_networking_port_v2" "global-infra-0-port" {
   name = "global-infra-0-port"
   network_id = "${openstack_networking_network_v2.global-infra-0.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.global-infra-0-subnet.id}",
+    ip_address = "${var.network}.1.3"
+  }]
 }
 
 output "openstack_networking_network_v2.global-infra-0.global-infra-0-subnet.subnet" {
@@ -222,6 +230,10 @@ resource "openstack_networking_subnet_v2" "global-infra-1-subnet" {
 resource "openstack_networking_port_v2" "global-infra-1-port" {
   name = "global-infra-1-port"
   network_id = "${openstack_networking_network_v2.global-infra-1.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.global-infra-1-subnet.id}",
+    ip_address = "${var.network}.2.3"
+  }]
 }
 
 output "openstack_networking_network_v2.global-infra-1.global-infra-1-subnet.subnet" {
@@ -242,6 +254,10 @@ resource "openstack_networking_subnet_v2" "global-infra-2-subnet" {
 resource "openstack_networking_port_v2" "global-infra-2-port" {
   name = "global-infra-2-port"
   network_id = "${openstack_networking_network_v2.global-infra-2.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.global-infra-2-subnet.id}",
+    ip_address = "${var.network}.3.3"
+  }]
 }
 
 output "openstack_networking_network_v2.global-infra-2.global-infra-2-subnet.subnet" {
@@ -293,6 +309,10 @@ resource "openstack_networking_subnet_v2" "dev-infra-0-subnet" {
 resource "openstack_networking_port_v2" "dev-infra-0-port" {
   name = "dev-infra-0-port"
   network_id = "${openstack_networking_network_v2.dev-infra-0.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.dev-infra-0-subnet.id}",
+    ip_address = "${var.network}.16.3"
+  }]
 }
 
 output "openstack_networking_network_v2.dev-infra-0.dev-infra-0-subnet.subnet" {
@@ -306,6 +326,10 @@ resource "openstack_networking_network_v2" "dev-infra-1" {
 resource "openstack_networking_port_v2" "dev-infra-1-port" {
   name = "dev-infra-1-port"
   network_id = "${openstack_networking_network_v2.dev-infra-1.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.dev-infra-1-subnet.id}",
+    ip_address = "${var.network}.17.3"
+  }]
 }
 
 resource "openstack_networking_subnet_v2" "dev-infra-1-subnet" {
@@ -325,6 +349,10 @@ resource "openstack_networking_network_v2" "dev-infra-2" {
 resource "openstack_networking_port_v2" "dev-infra-2-port" {
   name = "dev-infra-2-port"
   network_id = "${openstack_networking_network_v2.dev-infra-2.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.dev-infra-2-subnet.id}",
+    ip_address = "${var.network}.18.3"
+  }]
 }
 
 resource "openstack_networking_subnet_v2" "dev-infra-2-subnet" {
@@ -378,6 +406,10 @@ resource "openstack_networking_network_v2" "dev-cf-core-0" {
 resource "openstack_networking_port_v2" "dev-cf-core-0-port" {
   name = "dev-cf-core-0-port"
   network_id = "${openstack_networking_network_v2.dev-cf-core-0.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-0-subnet.id}",
+    ip_address = "${var.network}.20.3"
+  }]
 }
 
 resource "openstack_networking_subnet_v2" "dev-cf-core-0-subnet" {
@@ -397,6 +429,10 @@ resource "openstack_networking_network_v2" "dev-cf-core-1" {
 resource "openstack_networking_port_v2" "dev-cf-core-1-port" {
   name = "dev-cf-core-1-port"
   network_id = "${openstack_networking_network_v2.dev-cf-core-1.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-1-subnet.id}",
+    ip_address = "${var.network}.21.3"
+  }]
 }
 
 resource "openstack_networking_subnet_v2" "dev-cf-core-1-subnet" {
@@ -416,6 +452,10 @@ resource "openstack_networking_network_v2" "dev-cf-core-2" {
 resource "openstack_networking_port_v2" "dev-cf-core-2-port" {
   name = "dev-cf-core-2-port"
   network_id = "${openstack_networking_network_v2.dev-cf-core-2.id}"
+  fixed_ip = [{
+    subnet_id = "${openstack_networking_subnet_v2.dev-cf-core-2-subnet.id}",
+    ip_address = "${var.network}.22.3"
+  }]
 }
 
 resource "openstack_networking_subnet_v2" "dev-cf-core-2-subnet" {

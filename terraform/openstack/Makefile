@@ -11,11 +11,11 @@ manifest:
 	terraform plan -var-file ${VARS_FILE} -out ${PLAN_FILE}
 
 deploy:
-	terraform apply -var-file ${VARS_FILE} -parallelism=1
+	terraform apply -parallelism=1 -var-file ${VARS_FILE}
 	terraform output | ./yamler meta tf > ${OUT_FILE}
 
 destroy:
-	terraform plan -destroy -var-file ${VARS_FILE} -out ${PLAN_FILE}
+	terraform plan -destroy -parallelism=1 -var-file ${VARS_FILE} -out ${PLAN_FILE}
 	terraform apply ${PLAN_FILE}
 
 clean:
