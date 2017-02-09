@@ -1,26 +1,33 @@
 ### Add User
 
-Once on the bastion host, you'll want to use the `jumpbox` script, which has
-been installed automatically by the Terraform configuration. [This script installs][jumpbox]
-some useful utilities like `jq`, `spruce`, `safe`, and `genesis` all of which
-will be important when we start using the bastion host to do deployments.
+Once on the bastion host, you'll need to install the `jumpbox` script:
 
-**NOTE**: Try not to confuse the `jumpbox` script with the jumpbox _BOSH release_.
-The _BOSH release_ can be used as part of a deployment.  And the script gets
-run directly on the bastion host.
+```
+sudo curl -o /usr/local/bin/jumpbox \
+  https://raw.githubusercontent.com/starkandwayne/jumpbox/master/bin/jumpbox
+sudo chmod 0755 /usr/local/bin/jumpbox
+```
 
-Once connected to the bastion, check if the `jumpbox` utility is installed.
+To check if `jumpbox` was installed correctly, try checking the version:
 
 ```
 $ jumpbox -v
-jumpbox v49
+jumpbox v50
 ```
 
-In order to have the dependencies for the `bosh_cli` we need to create a user.
-Also a convenience method at the end will prompt for git configuration that will
-be useful when we are generating Genesis templates later.
+[This script installs][jumpbox] some useful utilities such as `jq`, `spruce`, `safe`,
+and `genesis` - all of which will be important when we start using the bastion host
+to do deployments.
 
-Also, using named accounts provides auditing (via the `sudo` logs), and
+**NOTE**: Try not to confuse the `jumpbox` script with the jumpbox _BOSH release_.
+The _BOSH release_ can be used as part of a deployment whereas the script is
+run directly on the bastion host.
+
+In order to have the dependencies for the `bosh_cli` we need to create a user.
+As part of creating a user you will be prompted for their git configuration, which
+will be useful when we use Genesis templates to create deployments later.
+
+Using named accounts will also provide auditing (via the `sudo` logs) as well as
 isolation (people won't step on each others toes on the filesystem) and
 customization (everyone gets to set their own prompt / shell / `$EDITOR`).
 
@@ -28,11 +35,11 @@ Let's add a user with `jumpbox useradd`:
 
 ```
 $ jumpbox useradd
-Full name: Joe User
+Full name: J User
 Username:  juser
 Enter the public key for this user's .ssh/authorized_keys file:
 You should run `jumpbox user` now, as juser:
-  su - juser 
+  su - juser
   jumpbox user
 ```
 
@@ -52,7 +59,7 @@ $ jumpbox user
 The following warning may show up when you run `jumpbox user`:
 ```
  * WARNING: You have '~/.profile' file, you might want to load it,
-    to do that add the following line to '/home/XJ/.bash_profile':
+    to do that add the following line to '/home/juser/.bash_profile':
 
       source ~/.profile
 ```
@@ -68,17 +75,18 @@ bosh not installed
 ### SSH Config
 
 On your local computer, setup an entry in the `~/.ssh/config` file for your
-bastion host.  Substituting the correct IP.
+bastion host - substituting the correct IP and SSH key.
 
 ```
 Host bastion
   Hostname 52.43.51.197
+  IdentityFile ~/.ssh/id_rsa
   User juser
 ```
 
 ### Test Login
 
-After you've logged in as `ubuntu` once, created your user, logged out and
+After you've logged in as `ubuntu` once, created your user, logged out, and
 configured your SSH config, you'll be ready to try to connect via the `Host`
 alias.
 
@@ -106,6 +114,6 @@ safe installed - safe v0.0.23
 vault installed - Vault v0.6.0
 genesis installed - genesis 1.5.2 (61864a21370c)
 
-git user.name  is 'Joe User'
+git user.name  is 'J User'
 git user.email is 'juser@starkandwayne.com'
 ```

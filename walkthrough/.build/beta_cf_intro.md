@@ -1,3 +1,5 @@
+Now it's time to move on to deploying our `beta` (staging) Cloud Foundry!
+
 #### Beta Cloud Foundry
 
 To deploy Cloud Foundry, we will go back into our `ops` directory, making use of
@@ -40,32 +42,42 @@ And the `staging` environment inside it:
 
 ```
 $ genesis new env (( insert_parameter site.name )) staging
-RSA 1024 bit CA certificates are loaded due to old openssl compatibility
-Running env setup hook: ~/ops/cf-deployments/.env_hooks/00_confirm_vault
 
- proto	http://10.10.10.6:8200
+	proto       https://10.4.1.16:8200
 
-Use this Vault for storing deployment credentials?  [yes or no] yes
-Running env setup hook: ~/ops/cf-deployments/.env_hooks/setup_certs
-Generating Cloud Foundry internal certs
-Uploading Cloud Foundry internal certs to Vault
-Running env setup hook: ~/ops/cf-deployments/.env_hooks/setup_cf_secrets
-Creating JWT Signing Key
-Creating app_ssh host key fingerprint
-Generating secrets
-Created environment (( insert_parameter site.name ))/staging:
-~/ops/cf-deployments/(( insert_parameter site.name ))/staging
-├── cloudfoundry.yml
-├── credentials.yml
-├── director.yml
-├── Makefile
-├── monitoring.yml
-├── name.yml
-├── networking.yml
-├── properties.yml
-├── README
-└── scaling.yml
+	Use this Vault for storing deployment credentials?  [yes or no] yes
+	Generating Cloud Foundry internal certs
+	Uploading Cloud Foundry internal certs to Vault
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/internal_ca
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/consul_client
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/consul_server
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/etcd_client
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/etcd_server
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/etcd_peer
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/blobstore
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/uaa
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/bbs_client
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/bbs
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/rep_client
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/rep
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/doppler
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/metron
+	wrote secret/(( insert_parameter site.name ))/staging/cf-deployments/certs/trafficcontroller
+	Creating JWT Signing Key
+	Creating app_ssh host key fingerprint
+	Generating secrets
+	Created environment (( insert_parameter site.name ))/staging:
+	~/ops/cf-deployments-deployments/(( insert_parameter site.name ))/staging
+	├── cloudfoundry.yml
+	├── credentials.yml
+	├── director.yml
+	├── Makefile
+	├── monitoring.yml
+	├── name.yml
+	├── networking.yml
+	├── properties.yml
+	├── README
+	└── scaling.yml
 
-0 directories, 10 files
-
+	0 directories, 10 files
 ```

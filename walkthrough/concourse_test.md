@@ -22,12 +22,12 @@ Task 43 done
 VMs total: 6
 ```
 
-Smoke test HAProxy IP address:
+Verify you get a response from the `haproxy` IP address:
 
 ```
 $ curl -i 10.4.1.51
 HTTP/1.1 200 OK
-Date: Thu, 07 Jul 2016 04:50:05 GMT
+Date: Thu, 02 Jan 2017 04:50:05 GMT
 Content-Type: text/html; charset=utf-8
 Transfer-Encoding: chunked
 

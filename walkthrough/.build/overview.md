@@ -1,7 +1,7 @@
 ## Overview
 
 Welcome to the Stark & Wayne guide to deploying Cloud Foundry on (( insert_parameter service.long_name )).
-  This guide provides the steps to create authentication credentials,
+This guide provides the steps to create authentication credentials,
 generate the underlying cloud infrastructure, then use Terraform to prepare a bastion
 host.
 
@@ -27,6 +27,7 @@ package is available through the power of Concourse pipelines.
 ![Levels of Bosh][levels_of_bosh]
 
 In the above diagram, BOSH (1) is the **proto-BOSH**, while BOSH (2) and BOSH (3)
-are the per-site BOSH Directors.
+are the per-site BOSH Directors. Note that it is the proto-BOSH (`(( insert_parameter site.name ))-proto-openvdc`)
+that deploys Vault, Concourse, Bolo, SHIELD as well as the other BOSH directors.
 
 Now it's time to setup the credentials.

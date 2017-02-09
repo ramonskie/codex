@@ -1,36 +1,30 @@
-### Production Environment
-
-Deploying the production environment will be much like deploying the `beta` environment above. You will need to deploy a BOSH Director, Cloud Foundry, and any services also deployed in the `beta` site. Hostnames, credentials, network information, and possibly scaling parameters will all be different, but the procedure for deploying them is the same.
-
 ### Next Steps
 
-Lather, rinse, repeat for all additional environments (dev, prod, loadtest, whatever's applicable to the client).
+Lather, rinse, repeat for all additional environments (e.g. loadtest, production).
 
 [//]: # (Links, please keep in alphabetical order)
 
-[amazon-region-doc]: http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RegionsAndAvailabilityZones.html
-[aws]:               https://signin.aws.amazon.com/console
-[aws-subnets]:       http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Subnets.html
-[az]:                http://aws.amazon.com/about-aws/global-infrastructure/
-[bastion_host]:      aws.md#bastion-host
 [bolo]:              https://github.com/cloudfoundry-community/bolo-boshrelease
+[cf-env]:            https://github.com/cloudfoundry-community/cf-env
 [cfconsul]:          https://docs.cloudfoundry.org/concepts/architecture/#bbs-consul
 [cfetcd]:            https://docs.cloudfoundry.org/concepts/architecture/#etcd
+[DebugUnknownError]: http://www.starkandwayne.com/blog/debug-unknown-error-when-you-push-your-app-to-cf/
 [DRY]:               https://en.wikipedia.org/wiki/Don%27t_repeat_yourself
+[fly]:               https://concourse.ci/fly-cli.html
 [genesis]:           https://github.com/starkandwayne/genesis
+[infra-ips]:         https://github.com/starkandwayne/codex/blob/master/part3/network.md#global-infrastructure-ip-allocation
 [jumpbox]:           https://github.com/starkandwayne/jumpbox
+[logemongo]:         https://github.com/starkandwayne/logemongo
 [netplan]:           https://github.com/starkandwayne/codex/blob/master/network.md
 [ngrok-download]:    https://ngrok.com/download
 [infra-ips]:         https://github.com/starkandwayne/codex/blob/master/part3/network.md#global-infrastructure-ip-allocation
-[setup_credentials]: aws.md#setup-credentials
-[spruce-129]:        https://github.com/geofffranks/spruce/issues/129
-[slither]:           http://slither.io
-[troubleshooting]:   troubleshooting.md
-[use_terraform]:     aws.md#use-terraform
-[verify_ssh]:        https://github.com/starkandwayne/codex/blob/master/troubleshooting.md#verify-keypair
-[cf-env]:            https://github.com/cloudfoundry-community/cf-env
+[nxlog]:             https://github.com/hybris/nxlog-boshrelease
 [orgs and spaces]:   https://docs.cloudfoundry.org/concepts/roles.html
-[DebugUnknownError]: http://www.starkandwayne.com/blog/debug-unknown-error-when-you-push-your-app-to-cf/
+[shield]:            https://github.com/starkandwayne/shield
+[slither]:           http://slither.io
+[spruce-129]:        https://github.com/geofffranks/spruce/issues/129
+[troubleshooting]:   troubleshooting.md
+[verify_ssh]:        https://github.com/starkandwayne/codex/blob/master/troubleshooting.md#verify-keypair
 
 [//]: # (Images, put in /images folder)
 
@@ -43,3 +37,7 @@ Lather, rinse, repeat for all additional environments (dev, prod, loadtest, what
 [bastion_5]:              images/bastion_step_5.png "Bolo"
 [bastion_6]:              images/bastion_step_6.png "Concourse"
 [global_network_diagram]: images/global_network_diagram.png "Global Network Diagram"
+[shield_ui]:              images/shield_ui.png "SHIELD UI"
+[pipelines]:              images/pipelines.png "pipelines"
+[manual_deploy]:          images/manual-deployment.png "manual-deploy"
+[bosh_pipeline]:          images/bosh-pipeline.png "bosh-pipeline"

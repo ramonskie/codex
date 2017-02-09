@@ -45,8 +45,8 @@ Director task 144
 ...
 Task 144 done
 
-Started		2016-07-08 17:23:47 UTC
-Finished	2016-07-08 17:34:46 UTC
+Started		2017-01-02 17:23:47 UTC
+Finished	2017-01-02 17:34:46 UTC
 Duration	00:10:59
 
 Deployed '(( insert_parameter site.name ))-staging-bosh' to '(( insert_parameter site.name ))-proto-bosh'
@@ -66,5 +66,3 @@ Logged in as 'admin'
 ```
 
 Again, since our creds are already in the long-term vault, we can skip the credential migration that was done in the proto-bosh deployment and go straight to committing our new deployment to the repo, and pushing it upstream.
-
-Now it's time to move on to deploying our `beta` (staging) Cloud Foundry!

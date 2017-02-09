@@ -26,7 +26,8 @@ Next, we'll create a site for your datacenter or VPC.  The bolo
 template deployment offers some site templates to make getting
 things stood up quick and easy, including:
 
-- `(( insert_parameter template_name ))` for Amazon Web Services VPC deployments
+- `aws` for Amazon Web Services VPC deployments
+- `openstack` for OpenStack deployments
 - `vsphere` for VMWare ESXi virtualization clusters
 - `bosh-lite` for deploying and testing locally
 

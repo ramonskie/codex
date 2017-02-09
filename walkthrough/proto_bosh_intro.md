@@ -5,8 +5,8 @@
 #### Generate BOSH Deploy
 
 When using [the Genesis framework][genesis] to manage our deploys across
-environments, a folder to manage each of the software we'll deploy needs to
-be created.
+environments, each deployment will need its own repository. For each new deployment,
+you'll need to change the remote URL in the `.git/config` file.
 
 First setup a `ops` folder in your user's home directory.
 

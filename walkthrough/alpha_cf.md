@@ -90,7 +90,10 @@ Unlike all the other deployments so far, we won't use `make manifest` to vet the
 
 ```
 cd bosh-lite/alpha
-$ cat properties.yml
+```
+In `properties.yml`:
+
+```
 ---
 meta:
   cf:
@@ -101,15 +104,13 @@ Now we can deploy:
 
 ```
 $ make deploy
-  checking https://genesis.starkandwayne.com for details on release cf/237
-  checking https://genesis.starkandwayne.com for details on release toolbelt/3.2.10
+  checking https://genesis.starkandwayne.com for details on release cf/250
+  checking https://genesis.starkandwayne.com for details on release toolbelt/3.3.0
   checking https://genesis.starkandwayne.com for details on release postgres/1.0.3
-  checking https://genesis.starkandwayne.com for details on release cf/237
-  checking https://genesis.starkandwayne.com for details on release toolbelt/3.2.10
-  checking https://genesis.starkandwayne.com for details on release postgres/1.0.3
+  ...
 Acting as user 'admin' on '(( insert_parameter site.name ))-try-anything-bosh-lite'
-Checking whether release cf/237 already exists...NO
-Using remote release `https://bosh.io/d/github.com/cloudfoundry/cf-release?v=237'
+Checking whether release cf/250 already exists...NO
+Using remote release `https://bosh.io/d/github.com/cloudfoundry/cf-release?v=250'
 
 Director task 1
   Started downloading remote release > Downloading remote release
@@ -123,8 +124,8 @@ Director task 12
 ...
 Task 12 done
 
-Started		2016-07-15 14:47:45 UTC
-Finished	2016-07-15 14:51:28 UTC
+Started		2017-01-02 14:47:45 UTC
+Finished	2017-01-02 14:51:28 UTC
 Duration	00:03:43
 
 Deployed `bosh-lite-alpha-cf' to `(( insert_parameter site.name ))-try-anything-bosh-lite'
@@ -153,8 +154,8 @@ Director task 18
 
 Task 18 done
 
-Started         2016-10-05 14:15:16 UTC
-Finished        2016-10-05 14:18:12 UTC
+Started         2017-01-02 14:15:16 UTC
+Finished        2017-01-02 14:18:12 UTC
 Duration        00:02:56
 
 [stdout]

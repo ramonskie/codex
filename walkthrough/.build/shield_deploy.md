@@ -1,7 +1,6 @@
-Then we need to configure our `store` and a default `schedule` and `retention` policy:
+Then we need to configure our `store` and a default `schedule` and `retention` policy in `properties.yml`:
 
 ```
-$ cat properties.yml
 ---
 ...
 
@@ -14,24 +13,21 @@ properties:
       config:
         access_key_id: (( vault "secret/(( insert_parameter site.name )):access_key" ))
         secret_access_key: (( vault "secret/(( insert_parameter site.name )):secret_key" ))
-        bucket: xxxxxx # <- backup's s3 bucket
+        bucket: xxxxxx          # <- backup's s3 bucket
         prefix: "/"
     schedule:
-      name: "default"
-      when: "daily 3am"
+      "default": "daily 3am"    # The key name provided is the name that will be used in the SHIELD UI
     retention:
-      name: "default"
-      expires: "86400" # 24 hours
+      "default": "86400"        # 24 hours
 ```
 
 Finally, if you recall, we already generated an SSH keypair for
 SHIELD, so that we could pre-deploy the public key to our
 **proto-BOSH**.  We stuck it in the Vault, at
 `secret/(( insert_parameter site.name ))/proto/shield/keys/core`, so let's get it back out for this
-deployment:
+deployment in `credentials.yml`:
 
 ```
-$ cat credentials.yml
 ---
 properties:
   shield:
@@ -60,7 +56,3 @@ Director task 13
 
 Once that's complete, you will be able to access your SHIELD
 deployment, and start configuring your backup jobs.
-
-### How to use SHIELD
-
-TODO: Add how to use SHIELD to backup and restore by using an example.
