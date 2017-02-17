@@ -34,5 +34,3 @@ https://www.gitbook.com/book/starkandwayne/codex/details
 [shield]:       https://github.com/starkandwayne/shield
 [spruce]:       https://github.com/geofffranks/spruce
 [vault]:        https://www.vaultproject.io/
-
-test
