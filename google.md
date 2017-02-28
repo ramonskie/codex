@@ -1632,7 +1632,7 @@ $ cat properties.yml
 ---
 meta:
   cf:
-    base_domain: 10.4.1.80.xip.io
+    base_domain: bosh-lite.com
 ```
 
 Now we can deploy:
