@@ -583,11 +583,11 @@ networks:
       - range: 10.4.1.0/24
         gateway: 10.4.1.1
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-global-infra-0 # <- your global-infra-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-global-infra-0 # <- your global-infra-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-global-internal # <- your global-internal firewall name
+            - snw-global-internal # <- your global-internal firewall name
         reserved:
           - 10.4.1.16 - 10.4.1.254 # Allocated to other deployments
         static:
@@ -760,10 +760,10 @@ networks:
       - range:    10.4.1.0/24
         gateway:  10.4.1.1
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-global-infra-0 # <- your global-infra-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-global-infra-0 # <- your global-infra-0 subnetwork name
           tags:
-            - cf-global-internal # <- your global-internal firewall name
+            - snw-global-internal # <- your global-internal firewall name
         reserved:
           - 10.4.1.2 - 10.4.1.15   # Allocated to other deployments
             # Vault (z1) is in 10.4.1.16/28
@@ -776,10 +776,10 @@ networks:
       - range:    10.4.2.0/24
         gateway:  10.4.2.1
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-global-infra-1 # <- your global-infra-1 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-global-infra-1 # <- your global-infra-1 subnetwork name
           tags:
-            - cf-global-internal # <- your global-internal firewall name
+            - snw-global-internal # <- your global-internal firewall name
         reserved:
           - 10.4.2.2 - 10.4.2.15   # Allocated to other deployments
             # Vault (z2) is in 10.4.2.16/28
@@ -792,10 +792,10 @@ networks:
       - range:    10.4.3.0/24
         gateway:  10.4.3.1
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-global-infra-2 # <- your global-infra-2 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-global-infra-2 # <- your global-infra-2 subnetwork name
           tags:
-            - cf-global-internal # <- your global-internal firewall name
+            - snw-global-internal # <- your global-internal firewall name
         reserved:
           - 10.4.3.2 - 10.4.3.15   # Allocated to other deployments
             # Vault (z3) is in 10.4.3.16/28
@@ -1078,11 +1078,11 @@ networks:
       - range:    10.4.1.0/24
         gateway:  10.4.1.1
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-global-infra-0 # <- your global-infra-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-global-infra-0 # <- your global-infra-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-global-internal # <- your global-internal firewall name
+            - snw-global-internal # <- your global-internal firewall name
         reserved:
           - 10.4.1.2 - 10.4.1.31   # Allocated to other deployments
             # SHIELD is in 10.4.1.32/28
@@ -1236,12 +1236,12 @@ networks:
    - range: 10.4.1.0/24
      gateway: 10.4.1.1
      cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-global-infra-0 # <- your global-infra-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-global-infra-0 # <- your global-infra-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-global-internal # <- your global-internal firewall name
-            - cf-global-external # <- your global-external firewall name
+            - snw-global-internal # <- your global-internal firewall name
+            - snw-global-external # <- your global-external firewall name
      reserved:
        - 10.4.1.2 - 10.4.1.63  # Allocated to other deployments
         # Bolo is in 10.4.1.64/28
@@ -1389,12 +1389,12 @@ networks:
       - range: 10.4.1.0/24
         gateway: 10.4.1.1
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-global-infra-0 # <- your global-infra-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-global-infra-0 # <- your global-infra-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-global-internal # <- your global-internal firewall name
-            - cf-global-external # <- your global-external firewall name
+            - snw-global-internal # <- your global-internal firewall name
+            - snw-global-external # <- your global-external firewall name
         reserved:
           - 10.4.1.2 - 10.4.1.47   # Allocated to other deployments
           - 10.4.1.65 - 10.4.1.254 # Allocated to other deployments
@@ -1551,12 +1551,12 @@ networks:
       - range: 10.4.1.0/24
         gateway: 10.4.1.1
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-global-infra-0 # <- your global-infra-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-global-infra-0 # <- your global-infra-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-global-internal # <- your global-internal firewall name
-            - cf-global-external # <- your global-external firewall name
+            - snw-global-internal # <- your global-internal firewall name
+            - snw-global-external # <- your global-external firewall name
         reserved:
           - 10.4.1.2 - 10.4.1.79   # Allocated to other deployments
           - 10.4.1.96 - 10.4.1.254 # Allocated to other deployments
@@ -1734,12 +1734,12 @@ networks:
       - range: 10.4.32.0/24
         gateway: 10.4.32.1
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-infra-0 # <- your staging-infra-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-infra-0 # <- your staging-infra-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-global-internal # <- your global-internal firewall name
-            - cf-staging-internal # <- your staging-internal firewall name
+            - snw-global-internal # <- your global-internal firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
         reserved:
             # BOSH is in 10.4.32.0/28
           - 10.4.32.16 - 10.4.32.254 # Allocated to other deployments
@@ -1996,12 +1996,12 @@ networks:
         static:
           - 10.4.35.2 - 10.4.35.100
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-cf-edge-0 # <- your staging-cf-edge-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-cf-edge-0 # <- your staging-cf-edge-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-staging-internal # <- your staging-internal firewall name
-            - cf-staging-external # <- your staging-external firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
+            - snw-staging-external # <- your staging-external firewall name
   - name: router2
     subnets:
       - range: 10.4.35.128/25
@@ -2009,12 +2009,12 @@ networks:
         static:
           - 10.4.35.130 - 10.4.35.227
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-cf-edge-1 # <- your staging-cf-edge-1 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-cf-edge-1 # <- your staging-cf-edge-1 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-staging-internal # <- your staging-internal firewall name
-            - cf-staging-external # <- your staging-external firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
+            - snw-staging-external # <- your staging-external firewall name
   - name: cf1
     subnets:
       - range: 10.4.36.0/24
@@ -2022,11 +2022,11 @@ networks:
         static:
           - 10.4.36.2 - 10.4.36.100
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-cf-core-0 # <- your staging-cf-core-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-cf-core-0 # <- your staging-cf-core-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-staging-internal # <- your staging-internal firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
   - name: cf2
     subnets:
       - range: 10.4.37.0/24
@@ -2034,11 +2034,11 @@ networks:
         static:
           - 10.4.37.2 - 10.4.37.100
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-cf-core-1 # <- your staging-cf-core-1 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-cf-core-1 # <- your staging-cf-core-1 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-staging-internal # <- your staging-internal firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
   - name: cf3
     subnets:
       - range: 10.4.38.0/24
@@ -2046,11 +2046,11 @@ networks:
         static:
           - 10.4.38.2 - 10.4.38.100
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-cf-core-2 # <- your staging-cf-core-2 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-cf-core-2 # <- your staging-cf-core-2 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-staging-internal # <- your staging-internal firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
   - name: runner1
     subnets:
       - range: 10.4.39.0/24
@@ -2058,11 +2058,11 @@ networks:
         static:
           - 10.4.39.2 - 10.4.39.100
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-cf-runtime-0 # <- your staging-cf-runtime-0 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-cf-runtime-0 # <- your staging-cf-runtime-0 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-staging-internal # <- your staging-internal firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
   - name: runner2
     subnets:
       - range: 10.4.40.0/24
@@ -2070,11 +2070,11 @@ networks:
         static:
           - 10.4.40.2 - 10.4.40.100
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-cf-runtime-1 # <- your staging-cf-runtime-1 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-cf-runtime-1 # <- your staging-cf-runtime-1 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-staging-internal # <- your staging-internal firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
   - name: runner3
     subnets:
       - range: 10.4.41.0/24
@@ -2082,11 +2082,11 @@ networks:
         static:
           - 10.4.41.2 - 10.4.41.100
         cloud_properties:
-          network_name: cf # <- your network name
-          subnetwork_name: cf-staging-cf-runtime-2 # <- your staging-cf-runtime-2 subnetwork name
+          network_name: snw # <- your network name
+          subnetwork_name: snw-staging-cf-runtime-2 # <- your staging-cf-runtime-2 subnetwork name
           ephemeral_external_ip: true
           tags:
-            - cf-staging-internal # <- your staging-internal firewall name
+            - snw-staging-internal # <- your staging-internal firewall name
 ```
 
 Let's see what's left now:
@@ -2151,7 +2151,7 @@ Error 100: VM failed to create: googleapi: Error 403: Quota 'CPUS' exceeded. Lim
 
 Google Cloud has per-region limits for different types of resources. Check what resource type your failed job is using and request to increase limits for the resource your jobs are failing at. You can log into your [Google Cloud console][console], go to `Compute Engine`, on the left column click `Quotas`, and then click the blue button that says `Request Increase`. It takes less than 5 minutes get limits increase approved through Google.
 
-If you want to scale your deployment in the current environment (here it is staging), you can modify `scaling.yml` in your `cf-deployments/europe-west1/staging` directory. In the following example, you scale cells in both zones to 2 and you change the resource pool `small_z1` to use the `n1-standard-2` machine type. Afterwards you can run `make manifest` and `make deploy`, please always remember to verify your changes in the manifest before you type `yes` to deploy making sure the changes are what you want.
+If you want to scale your deployment in the current environment (here it is staging), you can modify `scaling.yml` in your cf-deployments/europe-west1/staging` directory. In the following example, you scale cells in both zones to 2 and you change the resource pool `small_z1` to use the `n1-standard-2` machine type. Afterwards you can run `make manifest` and `make deploy`, please always remember to verify your changes in the manifest before you type `yes` to deploy making sure the changes are what you want.
 
 ```
 jobs:
