@@ -269,7 +269,7 @@ You should run `jumpbox user` now, as juser:
 
 After you've added the user, use the `sudo -iu juser` command to change to the user. And run `jumpbox user` to install all dependent packages.
 
-**TBD NOTE:** I was surprised I needed the extra sudo to avoid that extra password prompt. __The duplicate sudo is intentional__.  Maybe the issue is with the sudo setup and not with ssh. 
+**TBD NOTE:** I was surprised I needed the extra sudo to avoid that extra password prompt. __The duplicate sudo is intentional__.  Maybe the issue is with the sudo setup and not with ssh.
 
 ```
 $ sudo sudo -iu juser
@@ -2148,6 +2148,27 @@ You may encounter the following error when you are deploying Beta CF.
 ```
 Error 100: VM failed to create: googleapi: Error 403: Quota 'CPUS' exceeded. Limit: 72.0, quotaExceeded
 ```
+
+if the api jobs fails you probably have multiple dots in your domain name like if you used xx.xx.xx.xip.io
+then add the following to properties.yml and run "make manifest deploy"
+
+```
+meta:
+  cf:
+    base_bucket: mybucket
+
+
+cc:
+  buildpacks:
+    buildpack_directory_key: (( concat meta.cf.base_bucket "-cc-buildpacks" ))
+  droplets:
+    droplet_directory_key: (( concat meta.cf.base_bucket "-cc-droplets" ))
+  packages:
+    app_package_directory_key: (( concat meta.cf.base_bucket "-cc-packages" ))
+  resource_pool:
+    resource_directory_key: (( concat meta.cf.base_bucket "-cc-resources" ))
+```
+
 
 Google Cloud has per-region limits for different types of resources. Check what resource type your failed job is using and request to increase limits for the resource your jobs are failing at. You can log into your [Google Cloud console][console], go to `Compute Engine`, on the left column click `Quotas`, and then click the blue button that says `Request Increase`. It takes less than 5 minutes get limits increase approved through Google.
 
